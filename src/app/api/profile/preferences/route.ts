@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { z } from "zod";
+import { handleApiError, apiResponse } from "@/lib/errors";
 
 const preferencesSchema = z.object({
     defaultLocation: z.string().optional(),
@@ -10,7 +10,7 @@ const preferencesSchema = z.object({
     rememberInput: z.boolean().optional(),
     autoFillLocation: z.boolean().optional(),
     smartInsights: z.boolean().optional(),
-});
+}).strict();
 
 export async function PATCH(req: Request) {
     try {
@@ -19,10 +19,7 @@ export async function PATCH(req: Request) {
         const result = preferencesSchema.safeParse(body);
 
         if (!result.success) {
-            return NextResponse.json(
-                { error: "Validation failed", details: result.error.format() },
-                { status: 400 }
-            );
+            throw result.error;
         }
 
         const preferences = await prisma.userPreferences.upsert({
@@ -42,9 +39,8 @@ export async function PATCH(req: Request) {
             },
         });
 
-        return NextResponse.json(preferences);
+        return apiResponse(preferences);
     } catch (error) {
-        console.error("Failed to update preferences:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return handleApiError(error);
     }
 }

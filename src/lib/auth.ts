@@ -7,8 +7,10 @@ if (!secretStr) {
     throw new Error("JWT_SECRET environment variable is missing");
 }
 const JWT_SECRET = new TextEncoder().encode(secretStr);
-const COOKIE_NAME = "volttrack_token";
-const TOKEN_EXPIRY = "7d";
+const ACCESS_TOKEN_COOKIE = "volttrack_access_token";
+const REFRESH_TOKEN_COOKIE = "volttrack_refresh_token";
+const ACCESS_TOKEN_EXPIRY = "15m";
+const REFRESH_TOKEN_EXPIRY = "7d";
 
 // ─── Password ────────────────────────────────────────────
 export async function hashPassword(password: string): Promise<string> {
@@ -25,11 +27,19 @@ export interface TokenPayload {
     email: string;
 }
 
-export async function signToken(payload: TokenPayload): Promise<string> {
+export async function signAccessToken(payload: TokenPayload): Promise<string> {
     return new SignJWT({ ...payload })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime(TOKEN_EXPIRY)
+        .setExpirationTime(ACCESS_TOKEN_EXPIRY)
+        .sign(JWT_SECRET);
+}
+
+export async function signRefreshToken(payload: TokenPayload): Promise<string> {
+    return new SignJWT({ ...payload })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime(REFRESH_TOKEN_EXPIRY)
         .sign(JWT_SECRET);
 }
 
@@ -43,9 +53,20 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
 }
 
 // ─── Cookie helpers ──────────────────────────────────────
-export async function setAuthCookie(token: string) {
+export async function setAuthCookie(accessToken: string, refreshToken: string) {
     const cookieStore = await cookies();
-    cookieStore.set(COOKIE_NAME, token, {
+
+    // Access Token - Short lived
+    cookieStore.set(ACCESS_TOKEN_COOKIE, accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 15 * 60, // 15 minutes
+    });
+
+    // Refresh Token - Long lived
+    cookieStore.set(REFRESH_TOKEN_COOKIE, refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
@@ -54,19 +75,50 @@ export async function setAuthCookie(token: string) {
     });
 }
 
-export async function getAuthCookie(): Promise<string | undefined> {
+export async function getAccessToken(): Promise<string | undefined> {
     const cookieStore = await cookies();
-    return cookieStore.get(COOKIE_NAME)?.value;
+    return cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+}
+
+export async function getRefreshToken(): Promise<string | undefined> {
+    const cookieStore = await cookies();
+    return cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
 }
 
 export async function clearAuthCookie() {
     const cookieStore = await cookies();
-    cookieStore.delete(COOKIE_NAME);
+    cookieStore.delete(ACCESS_TOKEN_COOKIE);
+    cookieStore.delete(REFRESH_TOKEN_COOKIE);
 }
 
 // ─── Get authenticated user from cookie ──────────────────
 export async function getAuthUser(): Promise<TokenPayload | null> {
-    const token = await getAuthCookie();
-    if (!token) return null;
-    return verifyToken(token);
+    const accessToken = await getAccessToken();
+
+    // Try access token first
+    if (accessToken) {
+        const payload = await verifyToken(accessToken);
+        if (payload) return payload;
+    }
+
+    // Try refresh token if access token is invalid/expired
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) return null;
+
+    const refreshPayload = await verifyToken(refreshToken);
+    if (!refreshPayload) return null;
+
+    // In a full production app, we would verify the refresh token hasn't been revoked in DB.
+    // Here, we'll return the user info and assume the caller might want to issue new cookies.
+    // NOTE: This automatic refresh in getAuthUser only works if cookies() is allowed to be set.
+    // If called in a Server Component during render, set() will fail silently or throw.
+    try {
+        const newAccessToken = await signAccessToken(refreshPayload);
+        const newRefreshToken = await signRefreshToken(refreshPayload);
+        await setAuthCookie(newAccessToken, newRefreshToken);
+    } catch {
+        // Silently fail if we can't set cookies (e.g. in a RSC)
+    }
+
+    return refreshPayload;
 }

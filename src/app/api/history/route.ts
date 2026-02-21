@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
+import { handleApiError, apiResponse } from "@/lib/errors";
 
 export async function GET(req: Request) {
     try {
@@ -85,7 +85,7 @@ export async function GET(req: Request) {
         const insights = generateInsights(summary, aggregation, lastWeekAgg);
 
         // Format response
-        return NextResponse.json({
+        return apiResponse({
             sessions: sessions.map((s) => ({
                 ...s,
                 sessionDate: s.sessionDate.toISOString(),
@@ -101,8 +101,7 @@ export async function GET(req: Request) {
             },
         });
     } catch (error) {
-        console.error("Failed to fetch history:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return handleApiError(error);
     }
 }
 

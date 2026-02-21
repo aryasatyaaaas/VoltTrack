@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { compare } from "bcryptjs";
 import { z } from "zod";
+import { handleApiError, apiResponse } from "@/lib/errors";
 
 const deleteSchema = z.object({
     password: z.string().min(1, "Password is required"),
-});
+}).strict();
 
 export async function POST(req: Request) {
     try {
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
         const result = deleteSchema.safeParse(body);
         if (!result.success) {
-            return NextResponse.json({ error: "Password is required" }, { status: 400 });
+            throw result.error;
         }
 
         // Verify password
@@ -25,12 +25,12 @@ export async function POST(req: Request) {
         });
 
         if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            throw new Error("User not found");
         }
 
-        const isValid = await compare(body.password, user.passwordHash);
+        const isValid = await compare(result.data.password, user.passwordHash);
         if (!isValid) {
-            return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+            return handleApiError(new Error("Unauthorized: Incorrect password"));
         }
 
         // Cascade delete: preferences + sessions are deleted via onDelete: Cascade
@@ -38,9 +38,8 @@ export async function POST(req: Request) {
             where: { id: sessionUser.id },
         });
 
-        return NextResponse.json({ success: true });
+        return apiResponse({ success: true });
     } catch (error) {
-        console.error("Failed to delete account:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return handleApiError(error);
     }
 }

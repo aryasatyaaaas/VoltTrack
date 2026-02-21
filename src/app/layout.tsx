@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { CsrfProvider } from "@/components/auth/CsrfProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased bg-black text-zinc-100">
-        {children}
+        <CsrfProvider>
+          {children}
+        </CsrfProvider>
       </body>
     </html>
   );

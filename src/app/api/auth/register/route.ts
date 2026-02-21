@@ -2,14 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
 import { z } from "zod";
+import { rateLimit } from "@/lib/rate-limit";
 
 const registerSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-import { rateLimit } from "@/lib/rate-limit";
+}).strict();
 
 export async function POST(req: Request) {
     try {
@@ -26,8 +25,7 @@ export async function POST(req: Request) {
         const result = registerSchema.safeParse(body);
 
         if (!result.success) {
-            const errors = result.error.flatten().fieldErrors;
-            return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 });
+            return NextResponse.json({ error: "Invalid input" }, { status: 400 });
         }
 
         const { name, email, password } = result.data;

@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { z } from "zod";
+import { handleApiError, apiResponse } from "@/lib/errors";
 
 const updateSchema = z.object({
     energyKwh: z.number().positive().optional(),
@@ -10,7 +10,7 @@ const updateSchema = z.object({
     chargerType: z.string().optional(),
     durationMinutes: z.number().int().nonnegative().nullable().optional(),
     sessionDate: z.string().datetime().optional(),
-});
+}).strict();
 
 export async function PATCH(
     req: Request,
@@ -23,10 +23,7 @@ export async function PATCH(
 
         const result = updateSchema.safeParse(body);
         if (!result.success) {
-            return NextResponse.json(
-                { error: "Validation failed" },
-                { status: 400 }
-            );
+            throw result.error;
         }
 
         // Verify ownership
@@ -35,7 +32,7 @@ export async function PATCH(
         });
 
         if (!existing) {
-            return NextResponse.json({ error: "Session not found" }, { status: 404 });
+            throw new Error("Session not found");
         }
 
         const updated = await prisma.chargingSession.update({
@@ -50,10 +47,9 @@ export async function PATCH(
             },
         });
 
-        return NextResponse.json(updated);
+        return apiResponse(updated);
     } catch (error) {
-        console.error("Failed to update session:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return handleApiError(error);
     }
 }
 
@@ -71,14 +67,13 @@ export async function DELETE(
         });
 
         if (!existing) {
-            return NextResponse.json({ error: "Session not found" }, { status: 404 });
+            throw new Error("Session not found");
         }
 
         await prisma.chargingSession.delete({ where: { id } });
 
-        return NextResponse.json({ success: true });
+        return apiResponse({ success: true });
     } catch (error) {
-        console.error("Failed to delete session:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return handleApiError(error);
     }
 }

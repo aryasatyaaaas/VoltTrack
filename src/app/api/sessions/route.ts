@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { z } from "zod";
+import { handleApiError, apiResponse } from "@/lib/errors";
 
 const sessionSchema = z.object({
     kwh: z.number().positive("Energy must be positive"),
@@ -10,7 +10,7 @@ const sessionSchema = z.object({
     cost: z.number().nonnegative("Cost cannot be negative").nullable().optional(),
     chargerType: z.string().optional(),
     duration: z.number().int().nonnegative().optional(),
-});
+}).strict();
 
 export async function POST(req: Request) {
     try {
@@ -18,12 +18,8 @@ export async function POST(req: Request) {
         const body = await req.json();
 
         const result = sessionSchema.safeParse(body);
-
         if (!result.success) {
-            return NextResponse.json(
-                { error: "Validation failed", details: result.error.format() },
-                { status: 400 }
-            );
+            throw result.error;
         }
 
         const { kwh, date, location, cost, chargerType, duration } = result.data;
@@ -34,20 +30,15 @@ export async function POST(req: Request) {
                 energyKwh: kwh,
                 sessionDate: new Date(date),
                 location,
-                cost: cost ?? null, // Can be null as per schema update
+                cost: cost ?? null,
                 chargerType: chargerType ?? "Level 2",
                 durationMinutes: duration ?? null,
-                // Optional battery percentages not in Quick Add form, default to null
             },
         });
 
-        return NextResponse.json(session);
+        return apiResponse(session);
     } catch (error) {
-        console.error("Failed to create session:", error);
-        return NextResponse.json(
-            { error: "Internal Server Error" },
-            { status: 500 }
-        );
+        return handleApiError(error);
     }
 }
 
@@ -72,12 +63,8 @@ export async function GET(req: Request) {
             },
         });
 
-        return NextResponse.json(sessions);
+        return apiResponse(sessions);
     } catch (error) {
-        console.error("Failed to fetch sessions:", error);
-        return NextResponse.json(
-            { error: "Internal Server Error" },
-            { status: 500 }
-        );
+        return handleApiError(error);
     }
 }

@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { z } from "zod";
+import { handleApiError, apiResponse } from "@/lib/errors";
 
 const profileUpdateSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters").optional(),
     avatarUrl: z.string().url().nullable().optional(),
-});
+}).strict();
 
 export async function GET() {
     try {
@@ -35,7 +35,7 @@ export async function GET() {
         });
 
         if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            throw new Error("User not found");
         }
 
         // Auto-create preferences if they don't exist
@@ -54,14 +54,13 @@ export async function GET() {
             });
         }
 
-        return NextResponse.json({
+        return apiResponse({
             ...user,
             createdAt: user.createdAt.toISOString(),
             preferences,
         });
     } catch (error) {
-        console.error("Failed to fetch profile:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return handleApiError(error);
     }
 }
 
@@ -72,10 +71,7 @@ export async function PATCH(req: Request) {
         const result = profileUpdateSchema.safeParse(body);
 
         if (!result.success) {
-            return NextResponse.json(
-                { error: "Validation failed", details: result.error.format() },
-                { status: 400 }
-            );
+            throw result.error;
         }
 
         const updated = await prisma.user.update({
@@ -93,9 +89,8 @@ export async function PATCH(req: Request) {
             },
         });
 
-        return NextResponse.json(updated);
+        return apiResponse(updated);
     } catch (error) {
-        console.error("Failed to update profile:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return handleApiError(error);
     }
 }

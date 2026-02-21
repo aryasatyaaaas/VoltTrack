@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword, signToken, setAuthCookie } from "@/lib/auth";
+import { verifyPassword, signAccessToken, signRefreshToken, setAuthCookie } from "@/lib/auth";
 import { z } from "zod";
+import { rateLimit } from "@/lib/rate-limit";
 
 const loginSchema = z.object({
     email: z.string().email("Invalid email"),
     password: z.string().min(1, "Password is required"),
-});
-
-import { rateLimit } from "@/lib/rate-limit";
+}).strict();
 
 export async function POST(req: Request) {
     try {
@@ -40,8 +39,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
         }
 
-        const token = await signToken({ userId: user.id, email: user.email });
-        await setAuthCookie(token);
+        const payload = { userId: user.id, email: user.email };
+        const accessToken = await signAccessToken(payload);
+        const refreshToken = await signRefreshToken(payload);
+
+        await setAuthCookie(accessToken, refreshToken);
 
         return NextResponse.json({
             message: "Login successful",
