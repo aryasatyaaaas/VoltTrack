@@ -61,10 +61,18 @@ export default function ProfilePage() {
         await handleSavePreferences({ [key]: value });
     };
 
-    const handleDeleteAccount = async () => {
-        const res = await fetch("/api/profile/delete", { method: "DELETE" });
-        if (!res.ok) throw new Error("Failed to delete account");
-        // In a real app, redirect to landing page
+    const handleDeleteAccount = async (password: string) => {
+        const res = await fetch("/api/profile/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+        });
+
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || "Failed to delete account");
+        }
+
         window.location.href = "/";
     };
 

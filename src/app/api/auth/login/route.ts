@@ -8,8 +8,19 @@ const loginSchema = z.object({
     password: z.string().min(1, "Password is required"),
 });
 
+import { rateLimit } from "@/lib/rate-limit";
+
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get("x-forwarded-for") || "unknown";
+        const limiter = rateLimit(ip);
+        if (!limiter.success) {
+            return NextResponse.json(
+                { error: "Too many attempts. Please try again later." },
+                { status: 429 }
+            );
+        }
+
         const body = await req.json();
         const result = loginSchema.safeParse(body);
 

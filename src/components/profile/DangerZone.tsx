@@ -7,11 +7,12 @@ import { LogOut, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { DeleteAccountModal } from "./DeleteAccountModal";
 
 interface DangerZoneProps {
-    onDeleteAccount: () => Promise<void>;
+    onDeleteAccount: (password: string) => Promise<void>;
 }
 
 export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
     const [showModal, setShowModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const router = useRouter();
 
@@ -23,6 +24,10 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
         } catch {
             setIsLoggingOut(false);
         }
+    };
+
+    const handleDeleteAccount = async (password: string) => {
+        await onDeleteAccount(password);
     };
 
     return (
@@ -61,7 +66,7 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
             <DeleteAccountModal
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
-                onConfirm={onDeleteAccount}
+                onConfirm={handleDeleteAccount}
             />
         </>
     );

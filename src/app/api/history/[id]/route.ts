@@ -24,7 +24,7 @@ export async function PATCH(
         const result = updateSchema.safeParse(body);
         if (!result.success) {
             return NextResponse.json(
-                { error: "Validation failed", details: result.error.format() },
+                { error: "Validation failed" },
                 { status: 400 }
             );
         }

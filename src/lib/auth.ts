@@ -2,9 +2,11 @@ import { SignJWT, jwtVerify } from "jose";
 import { hash, compare } from "bcryptjs";
 import { cookies } from "next/headers";
 
-const JWT_SECRET = new TextEncoder().encode(
-    process.env.JWT_SECRET || "volttrack-super-secret-key-change-in-production"
-);
+const secretStr = process.env.JWT_SECRET;
+if (!secretStr) {
+    throw new Error("JWT_SECRET environment variable is missing");
+}
+const JWT_SECRET = new TextEncoder().encode(secretStr);
 const COOKIE_NAME = "volttrack_token";
 const TOKEN_EXPIRY = "7d";
 
