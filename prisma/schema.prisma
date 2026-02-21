@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  avatarUrl    String?
+  plan         String   @default("Free")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions    ChargingSession[]
+  preferences UserPreferences?
+}
+
+model UserPreferences {
+  id               String  @id @default(uuid())
+  userId           String  @unique
+  defaultLocation  String  @default("Home")
+  costPerKwh       Float   @default(0)
+  currency         String  @default("IDR")
+  rememberInput    Boolean @default(true)
+  autoFillLocation Boolean @default(true)
+  smartInsights    Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChargingSession {
+  id              String   @id @default(uuid())
+  userId          String
+  energyKwh       Float
+  cost            Float?
+  location        String
+  chargerType     String?  @default("Level 2")
+  durationMinutes Int?
+  batteryStartPct Float?
+  batteryEndPct   Float?
+  sessionDate     DateTime
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionDate])
+}
