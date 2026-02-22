@@ -56,10 +56,15 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
 export async function setAuthCookie(accessToken: string, refreshToken: string) {
     const cookieStore = await cookies();
 
+    // Determine if we should use secure cookies. 
+    // In local Docker networks or self-hosting via IP (HTTP), this needs to be false.
+    // Set REQUIRE_SECURE_COOKIES=true in .env if you use HTTPS via reverse proxy.
+    const isSecure = process.env.REQUIRE_SECURE_COOKIES === "true";
+
     // Access Token - Short lived
     cookieStore.set(ACCESS_TOKEN_COOKIE, accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: isSecure,
         sameSite: "lax",
         path: "/",
         maxAge: 15 * 60, // 15 minutes
@@ -68,7 +73,7 @@ export async function setAuthCookie(accessToken: string, refreshToken: string) {
     // Refresh Token - Long lived
     cookieStore.set(REFRESH_TOKEN_COOKIE, refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: isSecure,
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 24 * 7, // 7 days

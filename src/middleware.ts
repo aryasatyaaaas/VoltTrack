@@ -90,9 +90,10 @@ export async function middleware(req: NextRequest) {
 
     // Set new access token if refreshed
     if (newAccessToken) {
+        const isSecure = process.env.REQUIRE_SECURE_COOKIES === "true";
         response.cookies.set(ACCESS_TOKEN_COOKIE, newAccessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
+            secure: isSecure,
             sameSite: "lax",
             path: "/",
             maxAge: 15 * 60,
