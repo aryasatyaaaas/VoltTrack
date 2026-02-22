@@ -29,6 +29,7 @@ export async function GET() {
                         rememberInput: true,
                         autoFillLocation: true,
                         smartInsights: true,
+                        favoriteLocations: true,
                     },
                 },
             },
@@ -50,6 +51,7 @@ export async function GET() {
                     rememberInput: true,
                     autoFillLocation: true,
                     smartInsights: true,
+                    favoriteLocations: true,
                 },
             });
         }

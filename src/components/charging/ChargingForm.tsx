@@ -256,10 +256,16 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                         autoComplete="off"
                     />
                     <datalist id="location-suggestions">
-                        {recentLocations.map((loc) => (
+                        {(userProfile?.preferences?.favoriteLocations || []).map((loc) => (
+                            <option key={`fav-${loc}`} value={loc} />
+                        ))}
+                        {recentLocations.filter(l => !(userProfile?.preferences?.favoriteLocations || []).includes(l)).map((loc) => (
                             <option key={`recent-${loc}`} value={loc} />
                         ))}
-                        {LOCATION_suggestions.filter(l => !recentLocations.includes(l)).map((loc) => (
+                        {LOCATION_suggestions.filter(l =>
+                            !recentLocations.includes(l) &&
+                            !(userProfile?.preferences?.favoriteLocations || []).includes(l)
+                        ).map((loc) => (
                             <option key={`sugg-${loc}`} value={loc} />
                         ))}
                     </datalist>

@@ -10,6 +10,7 @@ const preferencesSchema = z.object({
     rememberInput: z.boolean().optional(),
     autoFillLocation: z.boolean().optional(),
     smartInsights: z.boolean().optional(),
+    favoriteLocations: z.array(z.string()).optional(),
 }).strict();
 
 export async function PATCH(req: Request) {
@@ -36,6 +37,7 @@ export async function PATCH(req: Request) {
                 rememberInput: true,
                 autoFillLocation: true,
                 smartInsights: true,
+                favoriteLocations: true,
             },
         });
 

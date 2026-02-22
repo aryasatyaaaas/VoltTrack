@@ -53,6 +53,7 @@ export interface UserPreferencesData {
     rememberInput: boolean;
     autoFillLocation: boolean;
     smartInsights: boolean;
+    favoriteLocations: string[];
 }
 
 export interface UserProfile {

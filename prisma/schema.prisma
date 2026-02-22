@@ -22,14 +22,15 @@ model User {
 }
 
 model UserPreferences {
-  id               String  @id @default(uuid())
-  userId           String  @unique
-  defaultLocation  String  @default("Home")
-  costPerKwh       Float   @default(0)
-  currency         String  @default("IDR")
-  rememberInput    Boolean @default(true)
-  autoFillLocation Boolean @default(true)
-  smartInsights    Boolean @default(true)
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  defaultLocation  String   @default("Home")
+  costPerKwh       Float    @default(0)
+  currency         String   @default("IDR")
+  rememberInput    Boolean  @default(true)
+  autoFillLocation Boolean  @default(true)
+  smartInsights    Boolean  @default(true)
+  favoriteLocations String[] @default([])
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
