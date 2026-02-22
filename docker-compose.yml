@@ -9,7 +9,7 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/volttrack?schema=public
-      - JWT_SECRET=your_jwt_secret_here
+      - JWT_SECRET
       - NODE_ENV=production
     depends_on:
       - postgres
