@@ -1,9 +1,7 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../src/generated/prisma";
 
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL,
-});
+const prisma = new PrismaClient();
 
 const locations = [
   "Home Garage",
@@ -87,7 +85,7 @@ async function main() {
     sessions.push({
       userId: user.id,
       energyKwh,
-      costUsd: Math.round(energyKwh * costPerKwh * 100) / 100,
+      cost: Math.round(energyKwh * costPerKwh * 100) / 100,
       location: randomItem(locations),
       chargerType,
       durationMinutes: duration,
