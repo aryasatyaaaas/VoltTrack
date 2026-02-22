@@ -1,4 +1,19 @@
 services:
+  volttrack-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: volttrack-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/volttrack?schema=public
+      - JWT_SECRET=your_jwt_secret_here
+      - NODE_ENV=production
+    depends_on:
+      - postgres
+
   postgres:
     image: postgres:16-alpine
     container_name: volttrack-db
@@ -8,7 +23,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: volttrack
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
