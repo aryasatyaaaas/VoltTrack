@@ -19,7 +19,13 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
     const handleLogout = async () => {
         setIsLoggingOut(true);
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
+            const csrfRes = await fetch("/api/csrf");
+            const { csrfToken } = await csrfRes.json();
+
+            await fetch("/api/auth/logout", {
+                method: "POST",
+                headers: { "x-csrf-token": csrfToken }
+            });
             router.push("/login");
         } catch {
             setIsLoggingOut(false);

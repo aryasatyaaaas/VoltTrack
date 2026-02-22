@@ -60,9 +60,17 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         setSuccessMessage(null);
 
         try {
+            // Fetch CSRF token first
+            const csrfRes = await fetch("/api/csrf");
+            if (!csrfRes.ok) throw new Error("Failed to get CSRF token");
+            const { csrfToken } = await csrfRes.json();
+
             const response = await fetch("/api/sessions", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-csrf-token": csrfToken
+                },
                 body: JSON.stringify({
                     ...data,
                     date: new Date(data.date).toISOString()

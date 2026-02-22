@@ -93,9 +93,15 @@ export default function HistoryPage() {
     };
 
     const handleUpdate = async (id: string, data: Partial<HistorySession>) => {
+        const csrfRes = await fetch("/api/csrf");
+        const { csrfToken } = await csrfRes.json();
+
         const res = await fetch(`/api/history/${id}`, {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "x-csrf-token": csrfToken
+            },
             body: JSON.stringify(data),
         });
         if (!res.ok) throw new Error("Failed to update");
@@ -104,7 +110,13 @@ export default function HistoryPage() {
     };
 
     const handleDelete = async (id: string) => {
-        const res = await fetch(`/api/history/${id}`, { method: "DELETE" });
+        const csrfRes = await fetch("/api/csrf");
+        const { csrfToken } = await csrfRes.json();
+
+        const res = await fetch(`/api/history/${id}`, {
+            method: "DELETE",
+            headers: { "x-csrf-token": csrfToken }
+        });
         if (!res.ok) throw new Error("Failed to delete");
         fetchHistory(1); // Refresh
     };

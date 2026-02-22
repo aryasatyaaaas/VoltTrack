@@ -66,8 +66,12 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
             const formData = new FormData();
             formData.append("avatar", file);
 
+            const csrfRes = await fetch("/api/csrf");
+            const { csrfToken } = await csrfRes.json();
+
             const res = await fetch("/api/profile/avatar", {
                 method: "POST",
+                headers: { "x-csrf-token": csrfToken },
                 body: formData,
             });
 

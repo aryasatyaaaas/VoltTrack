@@ -33,9 +33,15 @@ export default function ProfilePage() {
     };
 
     const handleUpdateName = async (name: string) => {
+        const csrfRes = await fetch("/api/csrf");
+        const { csrfToken } = await csrfRes.json();
+
         const res = await fetch("/api/profile", {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "x-csrf-token": csrfToken
+            },
             body: JSON.stringify({ name }),
         });
         if (!res.ok) throw new Error("Failed to update profile");
@@ -44,9 +50,15 @@ export default function ProfilePage() {
     };
 
     const handleSavePreferences = async (data: Partial<UserPreferencesData>) => {
+        const csrfRes = await fetch("/api/csrf");
+        const { csrfToken } = await csrfRes.json();
+
         const res = await fetch("/api/profile/preferences", {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "x-csrf-token": csrfToken
+            },
             body: JSON.stringify(data),
         });
         if (!res.ok) throw new Error("Failed to update preferences");
@@ -62,9 +74,15 @@ export default function ProfilePage() {
     };
 
     const handleDeleteAccount = async (password: string) => {
+        const csrfRes = await fetch("/api/csrf");
+        const { csrfToken } = await csrfRes.json();
+
         const res = await fetch("/api/profile/delete", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "x-csrf-token": csrfToken
+            },
             body: JSON.stringify({ password }),
         });
 
