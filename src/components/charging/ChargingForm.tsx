@@ -7,6 +7,7 @@ import * as z from "zod";
 import { Zap, MapPin, Calendar, Clock, DollarSign, Plug, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { motion, AnimatePresence } from "framer-motion";
+import type { UserProfile } from "@/types";
 
 const formSchema = z.object({
     kwh: z.number().positive("Energy must be greater than 0"),
@@ -29,6 +30,10 @@ interface ChargingFormProps {
 export function ChargingForm({ onSuccess }: ChargingFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+    // Auto-calculation explicit toggle
+    const [isAutoCalculating, setIsAutoCalculating] = useState(true);
 
     // Local storage state
     const [recentLocations, setRecentLocations] = useState<string[]>([]);
@@ -45,6 +50,30 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         },
     });
 
+    const watchedKwh = form.watch("kwh");
+    const watchedLocation = form.watch("location");
+
+    // Fetch user profile for preferences (costPerKwh, currency)
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const res = await fetch("/api/profile");
+                if (res.ok) {
+                    const data = await res.json();
+                    setUserProfile(data);
+
+                    // Auto-fill default location if the user hasn't typed anything yet
+                    if (data.preferences?.autoFillLocation && data.preferences?.defaultLocation) {
+                        if (!form.getValues("location")) {
+                            form.setValue("location", data.preferences.defaultLocation);
+                        }
+                    }
+                }
+            } catch (err) { }
+        };
+        loadProfile();
+    }, [form]);
+
     // Load suggestions from localStorage
     useEffect(() => {
         const saved = localStorage.getItem("volttrack_locations");
@@ -54,6 +83,31 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
             setRecentLocations(LOCATION_suggestions.slice(0, 3));
         }
     }, []);
+
+    // Auto-calculate cost when kWh changes
+    useEffect(() => {
+        if (!isAutoCalculating) return;
+
+        const costPerKwh = userProfile?.preferences?.costPerKwh || 0;
+        if (watchedKwh && costPerKwh > 0 && !Number.isNaN(watchedKwh)) {
+            // Calculate and round to 0 decimal places for IDR, or 2 for others if needed
+            const calculatedCost = Math.round(watchedKwh * costPerKwh);
+            form.setValue("cost", calculatedCost, { shouldValidate: true });
+        } else if (!watchedKwh) {
+            form.setValue("cost", undefined);
+        }
+    }, [watchedKwh, userProfile, isAutoCalculating, form]);
+
+    const handleCostManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.valueAsNumber;
+        if (!Number.isNaN(val)) {
+            setIsAutoCalculating(false); // Disable auto-calc once user manually overrides it
+            form.setValue("cost", val);
+        } else {
+            setIsAutoCalculating(true); // Re-enable if they clear it
+            form.setValue("cost", undefined);
+        }
+    };
 
     const onSubmit = async (data: FormValues) => {
         setIsSubmitting(true);
@@ -80,7 +134,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
             if (!response.ok) throw new Error("Failed to save session");
 
             // Save location to localStorage if new
-            const newLocations = Array.from(new Set([data.location, ...recentLocations])).slice(0, 5);
+            const newLocations = Array.from(new Set([data.location.trim(), ...recentLocations])).slice(0, 10);
             setRecentLocations(newLocations);
             localStorage.setItem("volttrack_locations", JSON.stringify(newLocations));
 
@@ -88,11 +142,12 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
             form.reset({
                 kwh: undefined,
                 date: new Date().toISOString().slice(0, 16),
-                location: data.location, // Keep last location for convenience? User said "remember last input"
+                location: userProfile?.preferences?.rememberInput ? data.location : "",
                 cost: undefined,
-                chargerType: data.chargerType, // Keep last type
+                chargerType: userProfile?.preferences?.rememberInput ? data.chargerType : "AC",
                 duration: undefined,
             });
+            setIsAutoCalculating(true);
 
             if (onSuccess) onSuccess();
 
@@ -107,11 +162,11 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         }
     };
 
-    // Helper to format IDR for display (not used in input directly to keep it number, but could add mask later)
-    // For now simple number input.
+    const currencySymbol = userProfile?.preferences?.currency === "USD" ? "$" :
+        userProfile?.preferences?.currency === "EUR" ? "€" : "Rp";
 
     return (
-        <Card className="glass-panel relative overflow-hidden p-6">
+        <Card className="glass-panel relative overflow-visible p-6">
             <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-white">Quick Add Session</h2>
                 <div className="rounded-full bg-cyan-500/10 p-2 text-cyan-400">
@@ -125,7 +180,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="absolute left-0 top-0 z-10 flex w-full items-center justify-center bg-emerald-500/20 py-2 text-sm font-medium text-emerald-400 backdrop-blur-md"
+                        className="absolute left-0 top-0 z-10 flex w-full items-center justify-center rounded-t-2xl bg-emerald-500/20 py-2 text-sm font-medium text-emerald-400 backdrop-blur-md"
                     >
                         {successMessage}
                     </motion.div>
@@ -144,7 +199,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                         <input
                             {...form.register("kwh", { valueAsNumber: true })}
                             type="number"
-                            step="0.1"
+                            step="0.01"
                             autoFocus
                             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-2xl font-bold text-white placeholder-zinc-700 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20"
                             placeholder="0.0"
@@ -178,7 +233,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                         </label>
                         <select
                             {...form.register("chargerType")}
-                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50 [&>option]:bg-black"
+                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50 [&>option]:bg-zinc-900"
                         >
                             {CHARGER_TYPES.map(type => (
                                 <option key={type} value={type}>{type}</option>
@@ -187,37 +242,51 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                     </div>
                 </div>
 
-                {/* Location */}
+                {/* Location (Datalist for custom inputs) */}
                 <div className="space-y-1.5">
                     <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
                         <MapPin className="h-3 w-3" /> Location
                     </label>
-                    <select
+                    <input
                         {...form.register("location")}
-                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50 [&>option]:bg-black"
-                    >
-                        <option value="">Select location</option>
-                        {LOCATION_suggestions.map((loc) => (
-                            <option key={loc} value={loc}>{loc}</option>
+                        type="text"
+                        list="location-suggestions"
+                        placeholder="Type location or pick from list..."
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50"
+                        autoComplete="off"
+                    />
+                    <datalist id="location-suggestions">
+                        {recentLocations.map((loc) => (
+                            <option key={`recent-${loc}`} value={loc} />
                         ))}
-                    </select>
+                        {LOCATION_suggestions.filter(l => !recentLocations.includes(l)).map((loc) => (
+                            <option key={`sugg-${loc}`} value={loc} />
+                        ))}
+                    </datalist>
                     {form.formState.errors.location && (
                         <p className="text-xs text-red-400">{form.formState.errors.location.message}</p>
                     )}
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {/* Cost (IDR) */}
-                    <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                            <DollarSign className="h-3 w-3" /> Cost (IDR)
-                        </label>
+                    {/* Cost */}
+                    <div className="space-y-1.5 mb-1">
+                        <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
+                                <DollarSign className="h-3 w-3" /> Cost ({userProfile?.preferences?.currency || "IDR"})
+                            </label>
+                            {isAutoCalculating && userProfile?.preferences?.costPerKwh ? (
+                                <span className="text-[10px] text-cyan-500 bg-cyan-500/10 px-1.5 py-0.5 rounded">Auto</span>
+                            ) : null}
+                        </div>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">Rp</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">{currencySymbol}</span>
                             <input
                                 {...form.register("cost", { valueAsNumber: true })}
                                 type="number"
-                                className="w-full rounded-lg border border-white/10 bg-white/5 pl-9 pr-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50"
+                                step="0.01"
+                                onChange={handleCostManualChange}
+                                className={`w-full rounded-lg border ${isAutoCalculating && userProfile?.preferences?.costPerKwh ? "border-cyan-500/30 bg-cyan-500/5 text-cyan-100" : "border-white/10 bg-white/5 text-zinc-300"} pl-8 pr-3 py-2 text-sm outline-none focus:border-cyan-500/50 transition-colors`}
                                 placeholder="0"
                             />
                         </div>
