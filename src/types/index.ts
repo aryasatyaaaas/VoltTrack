@@ -102,3 +102,11 @@ export interface HistoryResponse {
         hasMore: boolean;
     };
 }
+export interface RecentSession {
+    id: string;
+    energyKwh: number;
+    cost: number | null;
+    location: string;
+    chargerType: string | null;
+    sessionDate: string | Date;
+}

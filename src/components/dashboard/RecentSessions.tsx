@@ -38,7 +38,7 @@ export function RecentSessions({ sessions }: RecentSessionsProps) {
                         </div>
                         <div className="text-right">
                             <p className="font-medium text-white">
-                                {formatCurrency(session.costUsd)}
+                                {formatCurrency(session.cost || 0)}
                             </p>
                             <div className="flex items-center justify-end gap-1 text-xs text-zinc-500">
                                 <BatteryCharging className="h-3 w-3" />
