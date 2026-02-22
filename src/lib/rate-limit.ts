@@ -3,7 +3,7 @@
 
 const LRU = new Map<string, { count: number; lastReset: number }>();
 const WINDOW_SIZE = 60 * 1000; // 1 minute
-const MAX_REQUESTS = 10; // 10 requests per minute
+const MAX_REQUESTS = 20; // Increased to 20 requests per minute to avoid aggressive blocks behind proxy
 
 export function rateLimit(ip: string) {
     const now = Date.now();

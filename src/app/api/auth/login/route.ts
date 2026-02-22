@@ -11,7 +11,11 @@ const loginSchema = z.object({
 
 export async function POST(req: Request) {
     try {
-        const ip = req.headers.get("x-forwarded-for") || "unknown";
+        // More robust IP extraction for Docker/proxies
+        const forwardedFor = req.headers.get("x-forwarded-for");
+        const realIp = req.headers.get("x-real-ip");
+        const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : (realIp || "local");
+
         const limiter = rateLimit(ip);
         if (!limiter.success) {
             return NextResponse.json(

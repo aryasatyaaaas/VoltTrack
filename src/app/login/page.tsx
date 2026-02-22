@@ -39,7 +39,8 @@ export default function LoginPage() {
                 return;
             }
 
-            router.push("/dashboard");
+            // Force a hard navigation so middleware picks up the new cookie correctly
+            window.location.href = "/dashboard";
         } catch {
             setError("Something went wrong. Please try again.");
         } finally {
