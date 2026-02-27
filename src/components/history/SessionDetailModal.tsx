@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X, Zap, MapPin, Clock, Plug, Calendar, Pencil, Trash2, Loader2, Check } from "lucide-react";
-import type { HistorySession } from "@/types";
+import type { HistorySession, UserProfile } from "@/types";
+
+const LOCATIONS = ["Home", "Office", "Public Station", "Mall", "Highway Rest Stop"];
 
 interface SessionDetailModalProps {
     session: HistorySession | null;
@@ -23,6 +25,7 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
     const [isDeleting, setIsDeleting] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
     // Edit fields
     const [energyKwh, setEnergyKwh] = useState(0);
@@ -30,6 +33,17 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
     const [location, setLocation] = useState("");
     const [chargerType, setChargerType] = useState("");
     const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
+
+    // Fetch profile for favorite locations
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const res = await fetch("/api/profile");
+                if (res.ok) setUserProfile(await res.json());
+            } catch { }
+        };
+        loadProfile();
+    }, []);
 
     useEffect(() => {
         if (session) {
@@ -135,11 +149,12 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
                                 <label className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Location</label>
                                 <select value={location} onChange={(e) => setLocation(e.target.value)}
                                     className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/50 [&>option]:bg-black">
-                                    <option value="Home">Home</option>
-                                    <option value="Office">Office</option>
-                                    <option value="Public Station">Public Station</option>
-                                    <option value="Mall">Mall</option>
-                                    <option value="Highway Rest Stop">Highway Rest Stop</option>
+                                    {Array.from(new Set([
+                                        ...LOCATIONS,
+                                        ...(userProfile?.preferences?.favoriteLocations || [])
+                                    ])).map((loc) => (
+                                        <option key={loc} value={loc}>{loc}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
