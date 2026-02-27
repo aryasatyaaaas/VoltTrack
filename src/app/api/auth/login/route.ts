@@ -35,12 +35,12 @@ export async function POST(req: Request) {
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
-            return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+            return NextResponse.json({ error: "Email is not registered" }, { status: 401 });
         }
 
         const valid = await verifyPassword(password, user.passwordHash);
         if (!valid) {
-            return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+            return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
         }
 
         const payload = { userId: user.id, email: user.email };

@@ -242,33 +242,23 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                     </div>
                 </div>
 
-                {/* Location (Datalist for custom inputs) */}
+                {/* Location */}
                 <div className="space-y-1.5">
                     <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
                         <MapPin className="h-3 w-3" /> Location
                     </label>
-                    <input
+                    <select
                         {...form.register("location")}
-                        type="text"
-                        list="location-suggestions"
-                        placeholder="Type location or pick from list..."
-                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50"
-                        autoComplete="off"
-                    />
-                    <datalist id="location-suggestions">
-                        {(userProfile?.preferences?.favoriteLocations || []).map((loc) => (
-                            <option key={`fav-${loc}`} value={loc} />
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50 [&>option]:bg-zinc-900"
+                    >
+                        <option value="" disabled>Select location...</option>
+                        {Array.from(new Set([
+                            ...LOCATION_suggestions,
+                            ...(userProfile?.preferences?.favoriteLocations || [])
+                        ])).map((loc) => (
+                            <option key={loc} value={loc}>{loc}</option>
                         ))}
-                        {recentLocations.filter(l => !(userProfile?.preferences?.favoriteLocations || []).includes(l)).map((loc) => (
-                            <option key={`recent-${loc}`} value={loc} />
-                        ))}
-                        {LOCATION_suggestions.filter(l =>
-                            !recentLocations.includes(l) &&
-                            !(userProfile?.preferences?.favoriteLocations || []).includes(l)
-                        ).map((loc) => (
-                            <option key={`sugg-${loc}`} value={loc} />
-                        ))}
-                    </datalist>
+                    </select>
                     {form.formState.errors.location && (
                         <p className="text-xs text-red-400">{form.formState.errors.location.message}</p>
                     )}

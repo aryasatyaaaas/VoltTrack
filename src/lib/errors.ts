@@ -16,8 +16,9 @@ export function handleApiError(error: unknown) {
     }
 
     if (error instanceof Error) {
+        const msg = error.message.toLowerCase();
         // Custom error types could be handled here
-        if (error.message.includes("Unauthorized") || error.message.includes("not authenticated")) {
+        if (msg.includes("unauthorized") || msg.includes("not authenticated")) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
