@@ -92,7 +92,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                                     {initial}
                                 </div>
                             )}
-                            <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-zinc-950 bg-emerald-500" />
+
                         </div>
                         <div className="text-left">
                             <p className="text-xs font-semibold text-white">{displayName}</p>

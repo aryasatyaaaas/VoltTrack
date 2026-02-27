@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Card } from "@/components/ui/Card";
-import { Pencil, Check, X, Loader2, Camera } from "lucide-react";
+import { Pencil, Check, X, Loader2, Camera, AlertCircle } from "lucide-react";
 import type { UserProfile } from "@/types";
 
 interface ProfileHeaderProps {
@@ -20,13 +20,73 @@ function getInitials(name: string): string {
         .slice(0, 2);
 }
 
+/**
+ * Compress an image file using Canvas API.
+ * Resizes to max 256x256 and converts to JPEG at 0.7 quality.
+ */
+function compressImage(file: File): Promise<File> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            img.onload = () => {
+                const MAX_SIZE = 256;
+                let { width, height } = img;
+
+                // Scale down proportionally
+                if (width > height) {
+                    if (width > MAX_SIZE) {
+                        height = Math.round((height * MAX_SIZE) / width);
+                        width = MAX_SIZE;
+                    }
+                } else {
+                    if (height > MAX_SIZE) {
+                        width = Math.round((width * MAX_SIZE) / height);
+                        height = MAX_SIZE;
+                    }
+                }
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return reject(new Error("Failed to get canvas context"));
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (!blob) return reject(new Error("Compression failed"));
+                        const compressed = new File([blob], `avatar.jpg`, { type: "image/jpeg" });
+                        resolve(compressed);
+                    },
+                    "image/jpeg",
+                    0.7 // quality
+                );
+            };
+            img.onerror = () => reject(new Error("Failed to load image"));
+            img.src = e.target?.result as string;
+        };
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+    });
+}
+
 export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHeaderProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(profile.name);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatarUrl);
+    const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const showToast = (message: string, type: "error" | "success" = "error") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     const handleSave = async () => {
         if (name.trim().length < 2) return;
@@ -53,18 +113,21 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
         if (!file) return;
 
         if (!file.type.startsWith("image/")) {
-            alert("Please select an image file.");
+            showToast("Please select an image file (JPG, PNG, etc.).");
             return;
         }
-        if (file.size > 2 * 1024 * 1024) {
-            alert("Image must be under 2MB.");
+        if (file.size > 10 * 1024 * 1024) {
+            showToast("Image is too large. Maximum size is 10MB.");
             return;
         }
 
         setIsUploading(true);
         try {
+            // Compress the image before uploading
+            const compressed = await compressImage(file);
+
             const formData = new FormData();
-            formData.append("avatar", file);
+            formData.append("avatar", compressed);
 
             const csrfRes = await fetch("/api/csrf");
             const { csrfToken } = await csrfRes.json();
@@ -75,16 +138,19 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
                 body: formData,
             });
 
-            if (!res.ok) throw new Error("Upload failed");
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || "Upload failed");
+            }
 
             const data = await res.json();
             setAvatarUrl(data.avatarUrl);
             onAvatarChange?.(data.avatarUrl);
-        } catch (err) {
-            alert("Failed to upload image. Please try again.");
+            showToast("Profile photo updated!", "success");
+        } catch (err: any) {
+            showToast(err?.message || "Failed to upload image. Please try again.");
         } finally {
             setIsUploading(false);
-            // Reset input so same file can be re-selected
             if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
@@ -96,6 +162,22 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
 
     return (
         <Card className="relative overflow-hidden p-0">
+            {/* Toast notification */}
+            {toast && (
+                <div
+                    className={`absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur-md transition-all ${toast.type === "error"
+                            ? "border border-red-500/30 bg-red-500/15 text-red-300"
+                            : "border border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
+                        }`}
+                >
+                    {toast.type === "error" && <AlertCircle className="h-4 w-4 shrink-0" />}
+                    {toast.message}
+                    <button onClick={() => setToast(null)} className="ml-1 shrink-0 text-current opacity-60 hover:opacity-100">
+                        <X className="h-3.5 w-3.5" />
+                    </button>
+                </div>
+            )}
+
             {/* Gradient header strip */}
             <div className="h-24 bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-transparent" />
 
