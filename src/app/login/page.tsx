@@ -32,7 +32,16 @@ export default function LoginPage() {
                 body: JSON.stringify({ email, password }),
             });
 
-            const data = await res.json();
+            // Read as text first to avoid JSON parse errors on HTML error pages
+            const text = await res.text();
+            let data: any = {};
+            try {
+                data = JSON.parse(text);
+            } catch {
+                // Server returned non-JSON (e.g. HTML error page)
+                setError("Server error. Please try again later.");
+                return;
+            }
 
             if (!res.ok) {
                 setError(data.error || "Invalid email or password");
@@ -42,7 +51,7 @@ export default function LoginPage() {
             // Force a hard navigation so middleware picks up the new cookie correctly
             window.location.href = "/dashboard";
         } catch {
-            setError("Something went wrong. Please try again.");
+            setError("Could not connect to server. Please try again.");
         } finally {
             setLoading(false);
         }

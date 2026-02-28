@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { randomUUID } from "crypto";
 
 // Magic bytes for allowed image types
 const MAGIC_BYTES: Record<string, number[][]> = {
@@ -56,14 +53,10 @@ export async function POST(req: Request) {
             );
         }
 
-        // 3. Generate safe filename using UUID (no user input in path)
-        const filename = `${randomUUID()}.${rawExt}`;
-        const uploadDir = path.join(process.cwd(), "public", "uploads", "avatars");
-
-        await mkdir(uploadDir, { recursive: true });
-        await writeFile(path.join(uploadDir, filename), buffer);
-
-        const avatarUrl = `/uploads/avatars/${filename}`;
+        // 3. Store as base64 data URL in database (no filesystem write)
+        const base64 = buffer.toString("base64");
+        const mimeType = file.type || "image/jpeg";
+        const avatarUrl = `data:${mimeType};base64,${base64}`;
 
         await prisma.user.update({
             where: { id: user.userId },
