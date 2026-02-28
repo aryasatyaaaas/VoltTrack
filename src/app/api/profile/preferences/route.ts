@@ -24,9 +24,9 @@ export async function PATCH(req: Request) {
         }
 
         const preferences = await prisma.userPreferences.upsert({
-            where: { userId: sessionUser.id },
+            where: { userId: sessionUser.userId },
             create: {
-                userId: sessionUser.id,
+                userId: sessionUser.userId,
                 ...result.data,
             },
             update: result.data,

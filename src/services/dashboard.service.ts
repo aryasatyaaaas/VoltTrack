@@ -3,7 +3,7 @@ import { getPercentageChange, formatDate } from "@/lib/utils";
 import { getSessionUser } from "@/lib/session";
 import type { DashboardData, StoryItem, TimelineItem } from "@/types";
 
-/** Week boundary helpers */
+// ─── Week boundary helpers ───────────────────────────────
 function getWeekStart(offset: number = 0): Date {
     const now = new Date();
     const dayOfWeek = now.getDay();
@@ -40,7 +40,7 @@ function formatTimeAgo(date: Date): string {
     return `${diffDays}d ago`;
 }
 
-/** Hero metrics */
+// ─── Hero metrics (3 parallel aggregates) ────────────────
 async function getHeroData(userId: string) {
     const thisWeekStart = getWeekStart(0);
     const thisWeekEnd = getWeekEnd(0);
@@ -94,78 +94,102 @@ async function getHeroData(userId: string) {
     };
 }
 
-/** Energy breakdown by location and charger type */
+// ─── Energy breakdown using groupBy (no full table scan) ─
 async function getEnergyBreakdown(userId: string) {
-    const sessions = await prisma.chargingSession.findMany({
-        where: { userId },
-        select: { energyKwh: true, cost: true, location: true, chargerType: true },
-    });
+    const [byLocationRaw, byChargerRaw] = await Promise.all([
+        prisma.chargingSession.groupBy({
+            by: ["location"],
+            _sum: { energyKwh: true, cost: true },
+            where: { userId },
+        }),
+        prisma.chargingSession.groupBy({
+            by: ["chargerType"],
+            _sum: { energyKwh: true },
+            where: { userId },
+        }),
+    ]);
 
-    // By location
-    const byLocation: Record<string, number> = {};
-    const costByLocation: Record<string, number> = {};
-    // By charger type
-    const byCharger: Record<string, number> = {};
+    const totalEnergy = byLocationRaw.reduce((s, r) => s + (r._sum.energyKwh ?? 0), 0) || 1;
+    const totalCost = byLocationRaw.reduce((s, r) => s + (r._sum.cost ?? 0), 0) || 1;
 
-    for (const s of sessions) {
-        byLocation[s.location] = (byLocation[s.location] ?? 0) + s.energyKwh;
-        costByLocation[s.location] = (costByLocation[s.location] ?? 0) + (s.cost ?? 0);
-        const ct = s.chargerType ?? "Unknown";
-        byCharger[ct] = (byCharger[ct] ?? 0) + s.energyKwh;
-    }
-
-    const totalEnergy = sessions.reduce((sum, s) => sum + s.energyKwh, 0) || 1;
-    const totalCostAll = sessions.reduce((sum, s) => sum + (s.cost ?? 0), 0) || 1;
-
-    const locationBreakdown = Object.entries(byLocation)
-        .map(([name, kwh]) => ({
-            name,
-            kwh: Math.round(kwh * 10) / 10,
-            percent: Math.round((kwh / totalEnergy) * 100),
+    const locationBreakdown = byLocationRaw
+        .map((r) => ({
+            name: r.location,
+            kwh: Math.round((r._sum.energyKwh ?? 0) * 10) / 10,
+            percent: Math.round(((r._sum.energyKwh ?? 0) / totalEnergy) * 100),
         }))
         .sort((a, b) => b.kwh - a.kwh);
 
-    const chargerBreakdown = Object.entries(byCharger)
-        .map(([name, kwh]) => ({
-            name,
-            kwh: Math.round(kwh * 10) / 10,
-            percent: Math.round((kwh / totalEnergy) * 100),
+    const chargerBreakdown = byChargerRaw
+        .map((r) => ({
+            name: r.chargerType ?? "Unknown",
+            kwh: Math.round((r._sum.energyKwh ?? 0) * 10) / 10,
+            percent: Math.round(((r._sum.energyKwh ?? 0) / totalEnergy) * 100),
         }))
         .sort((a, b) => b.kwh - a.kwh);
 
-    const costByLocationArr = Object.entries(costByLocation)
-        .map(([name, cost]) => ({
-            name,
-            cost: Math.round(cost),
-            percent: Math.round((cost / totalCostAll) * 100),
+    const costByLocation = byLocationRaw
+        .map((r) => ({
+            name: r.location,
+            cost: Math.round(r._sum.cost ?? 0),
+            percent: Math.round(((r._sum.cost ?? 0) / totalCost) * 100),
         }))
         .sort((a, b) => b.cost - a.cost);
 
-    return { locationBreakdown, chargerBreakdown, costByLocation: costByLocationArr };
+    return { locationBreakdown, chargerBreakdown, costByLocation };
 }
 
-/** Weekly cost trend (last 8 weeks) */
+// ─── Weekly cost trend: single query + O(n) bucketing ────
 async function getWeeklyCostTrend(userId: string) {
-    const trend = [];
+    const rangeStart = getWeekStart(-7);
+    const rangeEnd = getWeekEnd(0);
+
+    // Build week keys in advance (O(8))
+    const weekKeys: string[] = [];
+    const weekStarts: number[] = [];
     for (let i = 7; i >= 0; i--) {
-        const start = getWeekStart(-i);
-        const end = getWeekEnd(-i);
-        const result = await prisma.chargingSession.aggregate({
-            _sum: { energyKwh: true, cost: true },
-            where: { userId, sessionDate: { gte: start, lt: end } },
-        });
-        trend.push({
-            week: formatDate(start).split(",")[0],
-            kwh: Math.round((result._sum.energyKwh ?? 0) * 10) / 10,
-            cost: Math.round(result._sum.cost ?? 0),
-        });
+        const ws = getWeekStart(-i);
+        weekKeys.push(formatDate(ws).split(",")[0]);
+        weekStarts.push(ws.getTime());
     }
-    return trend;
+
+    // Initialize buckets
+    const buckets = new Map<string, { kwh: number; cost: number }>();
+    for (const key of weekKeys) {
+        buckets.set(key, { kwh: 0, cost: 0 });
+    }
+
+    // Single DB query for entire 8-week range
+    const sessions = await prisma.chargingSession.findMany({
+        where: { userId, sessionDate: { gte: rangeStart, lt: rangeEnd } },
+        select: { sessionDate: true, energyKwh: true, cost: true },
+    });
+
+    // O(n) bucketing via arithmetic index computation
+    const rangeStartMs = rangeStart.getTime();
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+    for (const s of sessions) {
+        const sessionMs = new Date(s.sessionDate).getTime();
+        const idx = Math.floor((sessionMs - rangeStartMs) / WEEK_MS);
+        const clampedIdx = Math.max(0, Math.min(idx, weekKeys.length - 1));
+        const bucket = buckets.get(weekKeys[clampedIdx])!;
+        bucket.kwh += s.energyKwh;
+        bucket.cost += s.cost ?? 0;
+    }
+
+    return weekKeys.map((week) => {
+        const bucket = buckets.get(week)!;
+        return {
+            week,
+            kwh: Math.round(bucket.kwh * 10) / 10,
+            cost: Math.round(bucket.cost),
+        };
+    });
 }
 
-/** Predictions */
+// ─── Predictions ─────────────────────────────────────────
 async function getPredictions(userId: string) {
-    // Get last 14 days of sessions to find patterns
     const twoWeeksAgo = new Date();
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
@@ -175,7 +199,6 @@ async function getPredictions(userId: string) {
         select: { sessionDate: true, energyKwh: true, cost: true },
     });
 
-    // Average days between sessions
     let avgGapDays: number | null = null;
     if (recentSessions.length >= 2) {
         const gaps: number[] = [];
@@ -188,7 +211,6 @@ async function getPredictions(userId: string) {
         if (avgGapDays < 1) avgGapDays = 1;
     }
 
-    // Next charging prediction
     const lastSession = recentSessions[0];
     let nextChargingDate: Date | null = null;
     if (lastSession && avgGapDays !== null) {
@@ -200,12 +222,10 @@ async function getPredictions(userId: string) {
         }
     }
 
-    // Weekly projected usage
     const avgKwhPerSession = recentSessions.length > 0
         ? recentSessions.reduce((sum, s) => sum + s.energyKwh, 0) / recentSessions.length
         : 0;
 
-    // Default to a reasonable estimate if no history, but better to show 0 if no sessions at all
     const sessionsPerWeek = (avgGapDays !== null && avgGapDays > 0) ? 7 / avgGapDays : 0;
 
     const weeklyProjectedKwh = Math.round(avgKwhPerSession * sessionsPerWeek * 10) / 10;
@@ -224,11 +244,13 @@ async function getPredictions(userId: string) {
     };
 }
 
-/** Smart insights — at least 5 */
-async function getSmartInsights(heroData: Awaited<ReturnType<typeof getHeroData>>, breakdown: Awaited<ReturnType<typeof getEnergyBreakdown>>) {
+// ─── Smart insights ──────────────────────────────────────
+function getSmartInsights(
+    heroData: Awaited<ReturnType<typeof getHeroData>>,
+    breakdown: Awaited<ReturnType<typeof getEnergyBreakdown>>
+): StoryItem[] {
     const stories: StoryItem[] = [];
 
-    // 1: Cost this week
     if (heroData.cost > 0) {
         stories.push({
             id: "cost",
@@ -238,7 +260,6 @@ async function getSmartInsights(heroData: Awaited<ReturnType<typeof getHeroData>
         });
     }
 
-    // 2: Trend
     if (heroData.trendPercentage > 15) {
         stories.push({
             id: "trend-up",
@@ -255,7 +276,6 @@ async function getSmartInsights(heroData: Awaited<ReturnType<typeof getHeroData>
         });
     }
 
-    // 3: Top location
     if (breakdown.locationBreakdown.length > 0) {
         const top = breakdown.locationBreakdown[0];
         stories.push({
@@ -266,7 +286,6 @@ async function getSmartInsights(heroData: Awaited<ReturnType<typeof getHeroData>
         });
     }
 
-    // 4: Cost efficiency — Home vs Public
     const homeCost = breakdown.costByLocation.find((l) => l.name === "Home");
     const publicCost = breakdown.costByLocation.find((l) => l.name === "Public Station");
     if (homeCost && publicCost) {
@@ -287,7 +306,6 @@ async function getSmartInsights(heroData: Awaited<ReturnType<typeof getHeroData>
         }
     }
 
-    // 5: Sessions this week
     stories.push({
         id: "sessions-week",
         icon: "zap",
@@ -297,7 +315,6 @@ async function getSmartInsights(heroData: Awaited<ReturnType<typeof getHeroData>
         type: heroData.sessionsThisWeek > 0 ? "neutral" : "negative",
     });
 
-    // 6: All-time stats
     if (heroData.totalSessions > 5) {
         stories.push({
             id: "all-time",
@@ -307,7 +324,6 @@ async function getSmartInsights(heroData: Awaited<ReturnType<typeof getHeroData>
         });
     }
 
-    // 7: Charger type preference
     if (breakdown.chargerBreakdown.length > 1) {
         const top = breakdown.chargerBreakdown[0];
         stories.push({
@@ -321,6 +337,7 @@ async function getSmartInsights(heroData: Awaited<ReturnType<typeof getHeroData>
     return stories;
 }
 
+// ─── Timeline ────────────────────────────────────────────
 async function getTimeline(userId: string): Promise<TimelineItem[]> {
     const sessions = await prisma.chargingSession.findMany({
         where: { userId },
@@ -341,19 +358,30 @@ async function getTimeline(userId: string): Promise<TimelineItem[]> {
     }));
 }
 
+// ─── Main: fully parallelized ────────────────────────────
 export async function getDashboardData(): Promise<DashboardData> {
-    const user = await getSessionUser();
-    const hero = await getHeroData(user.id);
-    const breakdown = await getEnergyBreakdown(user.id);
-    const [stories, timeline, weeklyTrend, predictions] = await Promise.all([
-        getSmartInsights(hero, breakdown),
-        getTimeline(user.id),
-        getWeeklyCostTrend(user.id),
-        getPredictions(user.id),
+    const sessionUser = await getSessionUser();
+
+    // Fetch user name from DB (only needed here for greeting)
+    const user = await prisma.user.findUnique({
+        where: { id: sessionUser.userId },
+        select: { name: true },
+    });
+
+    // Phase 1: parallelized independent data fetches
+    const [hero, breakdown, timeline, weeklyTrend, predictions] = await Promise.all([
+        getHeroData(sessionUser.userId),
+        getEnergyBreakdown(sessionUser.userId),
+        getTimeline(sessionUser.userId),
+        getWeeklyCostTrend(sessionUser.userId),
+        getPredictions(sessionUser.userId),
     ]);
 
+    // Phase 2: CPU-only work (synchronous, no await)
+    const stories = getSmartInsights(hero, breakdown);
+
     return {
-        greeting: getGreeting(user.name ?? "there"),
+        greeting: getGreeting(user?.name ?? "there"),
         hero,
         stories,
         weeklyTrend,

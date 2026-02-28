@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
 import { z } from "zod";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 const registerSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -12,12 +12,7 @@ const registerSchema = z.object({
 
 export async function POST(req: Request) {
     try {
-        // More robust IP extraction for Docker/proxies
-        const forwardedFor = req.headers.get("x-forwarded-for");
-        const realIp = req.headers.get("x-real-ip");
-        const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : (realIp || "local");
-
-        const limiter = rateLimit(ip);
+        const limiter = rateLimit(getRateLimitKey(req));
         if (!limiter.success) {
             return NextResponse.json(
                 { error: "Too many attempts. Please try again later." },
@@ -34,10 +29,14 @@ export async function POST(req: Request) {
 
         const { name, email, password } = result.data;
 
-        // Check if email already exists
+        // Check if email already exists — return generic response to prevent enumeration
         const existing = await prisma.user.findUnique({ where: { email } });
         if (existing) {
-            return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+            // Return same response shape to prevent timing-based enumeration
+            return NextResponse.json(
+                { message: "Account created successfully" },
+                { status: 201 }
+            );
         }
 
         const passwordHash = await hashPassword(password);

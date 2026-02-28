@@ -3,6 +3,27 @@ import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { randomUUID } from "crypto";
+
+// Magic bytes for allowed image types
+const MAGIC_BYTES: Record<string, number[][]> = {
+    png: [[0x89, 0x50, 0x4e, 0x47]],
+    jpg: [[0xff, 0xd8, 0xff]],
+    jpeg: [[0xff, 0xd8, 0xff]],
+    gif: [[0x47, 0x49, 0x46, 0x38]],
+    webp: [[0x52, 0x49, 0x46, 0x46]], // RIFF header
+};
+
+const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+function validateMagicBytes(buffer: Buffer, ext: string): boolean {
+    const patterns = MAGIC_BYTES[ext];
+    if (!patterns) return false;
+    return patterns.some((pattern) =>
+        pattern.every((byte, i) => buffer[i] === byte)
+    );
+}
 
 export async function POST(req: Request) {
     try {
@@ -14,17 +35,29 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "No valid image provided" }, { status: 400 });
         }
 
-        // Max 2MB
-        if (file.size > 2 * 1024 * 1024) {
+        if (file.size > MAX_FILE_SIZE) {
             return NextResponse.json({ error: "Image must be under 2MB" }, { status: 400 });
+        }
+
+        // 1. Validate extension against allowlist
+        const rawExt = (file.name.split(".").pop() || "").toLowerCase();
+        if (!ALLOWED_EXTENSIONS.has(rawExt)) {
+            return NextResponse.json({ error: "Unsupported image format" }, { status: 400 });
         }
 
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // Save to public/uploads/avatars/
-        const ext = file.name.split(".").pop() || "png";
-        const filename = `${user.id}-${Date.now()}.${ext}`;
+        // 2. Validate magic bytes match claimed extension
+        if (!validateMagicBytes(buffer, rawExt)) {
+            return NextResponse.json(
+                { error: "File content does not match extension" },
+                { status: 400 }
+            );
+        }
+
+        // 3. Generate safe filename using UUID (no user input in path)
+        const filename = `${randomUUID()}.${rawExt}`;
         const uploadDir = path.join(process.cwd(), "public", "uploads", "avatars");
 
         await mkdir(uploadDir, { recursive: true });
@@ -32,9 +65,8 @@ export async function POST(req: Request) {
 
         const avatarUrl = `/uploads/avatars/${filename}`;
 
-        // Update user record
         await prisma.user.update({
-            where: { id: user.id },
+            where: { id: user.userId },
             data: { avatarUrl },
         });
 

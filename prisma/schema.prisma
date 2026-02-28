@@ -50,6 +50,6 @@ model ChargingSession {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
-  @@index([sessionDate])
+  @@index([userId, sessionDate]) // Composite: covers most queries
+  @@index([sessionDate])         // For cross-user date queries
 }

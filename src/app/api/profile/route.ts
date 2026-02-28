@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { z } from "zod";
-import { handleApiError, apiResponse } from "@/lib/errors";
+import { handleApiError, apiResponse, NotFoundError } from "@/lib/errors";
 
 const profileUpdateSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters").optional(),
@@ -13,7 +13,7 @@ export async function GET() {
         const sessionUser = await getSessionUser();
 
         const user = await prisma.user.findUnique({
-            where: { id: sessionUser.id },
+            where: { id: sessionUser.userId },
             select: {
                 id: true,
                 name: true,
@@ -36,14 +36,14 @@ export async function GET() {
         });
 
         if (!user) {
-            throw new Error("User not found");
+            throw new NotFoundError("User not found");
         }
 
         // Auto-create preferences if they don't exist
         let preferences = user.preferences;
         if (!preferences) {
             preferences = await prisma.userPreferences.create({
-                data: { userId: user.id },
+                data: { userId: sessionUser.userId },
                 select: {
                     defaultLocation: true,
                     costPerKwh: true,
@@ -77,7 +77,7 @@ export async function PATCH(req: Request) {
         }
 
         const updated = await prisma.user.update({
-            where: { id: sessionUser.id },
+            where: { id: sessionUser.userId },
             data: {
                 ...(result.data.name && { name: result.data.name }),
                 ...(result.data.avatarUrl !== undefined && { avatarUrl: result.data.avatarUrl }),

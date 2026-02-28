@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { compare } from "bcryptjs";
 import { z } from "zod";
-import { handleApiError, apiResponse } from "@/lib/errors";
+import { handleApiError, apiResponse, NotFoundError, UnauthorizedError } from "@/lib/errors";
 
 const deleteSchema = z.object({
     password: z.string().min(1, "Password is required"),
@@ -18,24 +18,23 @@ export async function POST(req: Request) {
             throw result.error;
         }
 
-        // Verify password
         const user = await prisma.user.findUnique({
-            where: { id: sessionUser.id },
+            where: { id: sessionUser.userId },
             select: { passwordHash: true },
         });
 
         if (!user) {
-            throw new Error("User not found");
+            throw new NotFoundError("User not found");
         }
 
         const isValid = await compare(result.data.password, user.passwordHash);
         if (!isValid) {
-            return handleApiError(new Error("Unauthorized: Incorrect password"));
+            throw new UnauthorizedError("Incorrect password");
         }
 
         // Cascade delete: preferences + sessions are deleted via onDelete: Cascade
         await prisma.user.delete({
-            where: { id: sessionUser.id },
+            where: { id: sessionUser.userId },
         });
 
         return apiResponse({ success: true });

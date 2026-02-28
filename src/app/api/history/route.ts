@@ -12,11 +12,11 @@ export async function GET(req: Request) {
         const location = searchParams.get("location");
         const chargerType = searchParams.get("chargerType");
         const search = searchParams.get("search");
-        const page = parseInt(searchParams.get("page") || "1");
-        const limit = parseInt(searchParams.get("limit") || "20");
+        const page = Math.max(parseInt(searchParams.get("page") || "1"), 1);
+        const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "20"), 1), 100);
 
         // Build where clause
-        const where: Record<string, unknown> = { userId: user.id };
+        const where: Record<string, unknown> = { userId: user.userId };
 
         if (from || to) {
             where.sessionDate = {
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
             }),
             prisma.chargingSession.count({ where }),
             prisma.chargingSession.aggregate({
-                where: { userId: user.id },
+                where: { userId: user.userId },
                 _sum: { energyKwh: true, cost: true },
                 _count: { id: true },
                 _avg: { energyKwh: true },
@@ -62,7 +62,7 @@ export async function GET(req: Request) {
             // Last week aggregation for insights
             prisma.chargingSession.aggregate({
                 where: {
-                    userId: user.id,
+                    userId: user.userId,
                     sessionDate: {
                         gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
                         lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),

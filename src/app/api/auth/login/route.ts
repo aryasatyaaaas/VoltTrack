@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, signAccessToken, signRefreshToken, setAuthCookie } from "@/lib/auth";
 import { z } from "zod";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 const loginSchema = z.object({
     email: z.string().email("Invalid email"),
@@ -11,12 +11,7 @@ const loginSchema = z.object({
 
 export async function POST(req: Request) {
     try {
-        // More robust IP extraction for Docker/proxies
-        const forwardedFor = req.headers.get("x-forwarded-for");
-        const realIp = req.headers.get("x-real-ip");
-        const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : (realIp || "local");
-
-        const limiter = rateLimit(ip);
+        const limiter = rateLimit(getRateLimitKey(req));
         if (!limiter.success) {
             return NextResponse.json(
                 { error: "Too many attempts. Please try again later." },

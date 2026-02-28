@@ -1,21 +1,19 @@
-import { prisma } from "@/lib/prisma";
-import { getAuthUser } from "@/lib/auth";
+import { getAuthUser, type TokenPayload } from "@/lib/auth";
+import { UnauthorizedError } from "@/lib/errors";
 
-export async function getSessionUser() {
-    const tokenPayload = await getAuthUser();
+/**
+ * Get authenticated user from JWT payload.
+ *
+ * Trusts the JWT claims (userId, email) without an extra DB roundtrip.
+ * The JWT signature was already verified by `getAuthUser()`.
+ * Only query the database when you need additional profile data (name, avatar).
+ */
+export async function getSessionUser(): Promise<TokenPayload> {
+    const payload = await getAuthUser();
 
-    if (!tokenPayload) {
-        throw new Error("Not authenticated");
+    if (!payload) {
+        throw new UnauthorizedError("Not authenticated");
     }
 
-    const user = await prisma.user.findUnique({
-        where: { id: tokenPayload.userId },
-        select: { id: true, email: true, name: true },
-    });
-
-    if (!user) {
-        throw new Error("User not found");
-    }
-
-    return user;
+    return payload;
 }

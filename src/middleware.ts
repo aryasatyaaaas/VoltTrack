@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify, SignJWT } from "jose";
+import {
+    ACCESS_TOKEN_COOKIE,
+    REFRESH_TOKEN_COOKIE,
+    CSRF_COOKIE_NAME,
+    CSRF_HEADER_NAME,
+    PROTECTED_PATHS,
+    AUTH_PATHS,
+    CSRF_METHODS,
+} from "@/lib/constants";
 
-const secretStr = process.env.JWT_SECRET;
-const JWT_SECRET = new TextEncoder().encode(secretStr);
-
-const ACCESS_TOKEN_COOKIE = "volttrack_access_token";
-const REFRESH_TOKEN_COOKIE = "volttrack_refresh_token";
-const CSRF_COOKIE_NAME = "volttrack_csrf_token";
-const CSRF_HEADER_NAME = "x-csrf-token";
-
-// Routes that require authentication
-const protectedPaths = ["/dashboard", "/charging", "/history", "/profile"];
-// Routes only for unauthenticated users
-const authPaths = ["/login", "/register"];
-// Methods that require CSRF protection
-const csrfMethods = ["POST", "PATCH", "DELETE"];
+// Lazy JWT secret for edge runtime
+let _secret: Uint8Array | null = null;
+function getSecret(): Uint8Array {
+    if (_secret) return _secret;
+    const s = process.env.JWT_SECRET;
+    if (!s) throw new Error("JWT_SECRET is required");
+    _secret = new TextEncoder().encode(s);
+    return _secret;
+}
 
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
@@ -25,33 +29,32 @@ export async function middleware(req: NextRequest) {
     const refreshToken = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 
     let isAuthenticated = false;
-    let payload: any = null;
+    let payload: Record<string, unknown> | null = null;
     let newAccessToken: string | null = null;
 
     // 1. Verify Access Token
     if (accessToken) {
         try {
-            const { payload: p } = await jwtVerify(accessToken, JWT_SECRET);
-            payload = p;
+            const { payload: p } = await jwtVerify(accessToken, getSecret());
+            payload = p as Record<string, unknown>;
             isAuthenticated = true;
         } catch {
-            // Access token expired or invalid, try refresh token
+            // Access token expired or invalid
         }
     }
 
     // 2. Try Refresh Token if not authenticated
     if (!isAuthenticated && refreshToken) {
         try {
-            const { payload: p } = await jwtVerify(refreshToken, JWT_SECRET);
-            payload = p;
+            const { payload: p } = await jwtVerify(refreshToken, getSecret());
+            payload = p as Record<string, unknown>;
             isAuthenticated = true;
 
-            // Issue new Access Token (15m)
             newAccessToken = await new SignJWT({ ...p })
                 .setProtectedHeader({ alg: "HS256" })
                 .setIssuedAt()
                 .setExpirationTime("15m")
-                .sign(JWT_SECRET);
+                .sign(getSecret());
         } catch {
             // Refresh token also invalid/expired
         }
@@ -60,23 +63,21 @@ export async function middleware(req: NextRequest) {
     let response = NextResponse.next();
 
     // 3. Handle Route Protection
-    if (protectedPaths.some((p) => pathname.startsWith(p))) {
+    if (PROTECTED_PATHS.some((p) => pathname.startsWith(p))) {
         if (!isAuthenticated) {
-            const loginUrl = new URL("/login", req.url);
-            return NextResponse.redirect(loginUrl);
+            return NextResponse.redirect(new URL("/login", req.url));
         }
     }
 
     // 4. Redirect authenticated users away from auth pages
-    if (authPaths.some((p) => pathname.startsWith(p))) {
+    if (AUTH_PATHS.some((p) => pathname.startsWith(p))) {
         if (isAuthenticated) {
             return NextResponse.redirect(new URL("/dashboard", req.url));
         }
     }
 
     // 5. CSRF Protection for state-changing methods
-    // Skip CSRF for login/register as they typically don't have a session yet or handle it internally
-    if (csrfMethods.includes(method) && !pathname.startsWith("/api/auth")) {
+    if (CSRF_METHODS.includes(method) && !pathname.startsWith("/api/auth")) {
         const csrfCookie = req.cookies.get(CSRF_COOKIE_NAME)?.value;
         const csrfHeader = req.headers.get(CSRF_HEADER_NAME);
 
@@ -112,9 +113,10 @@ export async function middleware(req: NextRequest) {
     }
 
     // Content Security Policy
+    const isDev = process.env.NODE_ENV !== "production";
     const cspHeader = `
         default-src 'self';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        script-src 'self' ${isDev ? "'unsafe-inline' 'unsafe-eval'" : "'unsafe-inline'"};
         style-src 'self' 'unsafe-inline';
         img-src 'self' blob: data:;
         font-src 'self' data:;
@@ -137,6 +139,6 @@ export const config = {
         "/profile/:path*",
         "/login",
         "/register",
-        "/api/:path*", // Include API for CSRF check
+        "/api/:path*",
     ],
 };

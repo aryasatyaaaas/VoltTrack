@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { z } from "zod";
-import { handleApiError, apiResponse } from "@/lib/errors";
+import { handleApiError, apiResponse, NotFoundError } from "@/lib/errors";
 
 const updateSchema = z.object({
     energyKwh: z.number().positive().optional(),
@@ -28,11 +28,11 @@ export async function PATCH(
 
         // Verify ownership
         const existing = await prisma.chargingSession.findFirst({
-            where: { id, userId: user.id },
+            where: { id, userId: user.userId },
         });
 
         if (!existing) {
-            throw new Error("Session not found");
+            throw new NotFoundError("Session not found");
         }
 
         const updated = await prisma.chargingSession.update({
@@ -63,11 +63,11 @@ export async function DELETE(
 
         // Verify ownership
         const existing = await prisma.chargingSession.findFirst({
-            where: { id, userId: user.id },
+            where: { id, userId: user.userId },
         });
 
         if (!existing) {
-            throw new Error("Session not found");
+            throw new NotFoundError("Session not found");
         }
 
         await prisma.chargingSession.delete({ where: { id } });

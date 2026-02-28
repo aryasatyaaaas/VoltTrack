@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
         const session = await prisma.chargingSession.create({
             data: {
-                userId: user.id,
+                userId: user.userId,
                 energyKwh: kwh,
                 sessionDate: new Date(date),
                 location,
@@ -46,10 +46,10 @@ export async function GET(req: Request) {
     try {
         const user = await getSessionUser();
         const { searchParams } = new URL(req.url);
-        const limit = parseInt(searchParams.get("limit") || "5");
+        const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "5"), 1), 100);
 
         const sessions = await prisma.chargingSession.findMany({
-            where: { userId: user.id },
+            where: { userId: user.userId },
             orderBy: { sessionDate: "desc" },
             take: limit,
             select: {
