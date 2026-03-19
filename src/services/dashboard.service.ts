@@ -28,6 +28,7 @@ function getGreeting(name: string): string {
     return `Good evening, ${name}`;
 }
 
+
 function formatTimeAgo(date: Date): string {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();

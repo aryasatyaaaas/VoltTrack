@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Zap, Wallet } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -21,6 +21,17 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const SIZE = (RADIUS + STROKE) * 2 + 8;
 
 export function PersonalHero({ greeting, kwh, cost, trendPercentage }: PersonalHeroProps) {
+    const [displayGreeting, setDisplayGreeting] = useState(greeting);
+
+    useEffect(() => {
+        const name = greeting.split(", ")[1] || "there";
+        const hour = new Date().getHours();
+        let prefix = "Good morning";
+        if (hour >= 12 && hour < 18) prefix = "Good afternoon";
+        else if (hour >= 18) prefix = "Good evening";
+        setDisplayGreeting(`${prefix}, ${name}`);
+    }, [greeting]);
+
     const progress = Math.min(kwh / WEEKLY_GOAL, 1);
     const animatedProgress = useMotionValue(0);
     const strokeDashoffset = useTransform(
@@ -57,7 +68,7 @@ export function PersonalHero({ greeting, kwh, cost, trendPercentage }: PersonalH
                 transition={{ duration: 0.5 }}
                 className="mb-5 text-sm font-medium text-zinc-500"
             >
-                {greeting} 👋
+                {displayGreeting} 👋
             </motion.p>
 
             {/* Arc Ring — scales via wrapper */}
