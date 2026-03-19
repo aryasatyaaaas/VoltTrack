@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Zap, MapPin, Calendar, Clock, DollarSign, Plug, Loader2 } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { Zap, MapPin, Calendar, Clock, Loader2, Plug } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { UserProfile } from "@/types";
 
@@ -31,18 +30,13 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-
-    // Auto-calculation explicit toggle
     const [isAutoCalculating, setIsAutoCalculating] = useState(true);
-
-    // Local storage state
-    const [recentLocations, setRecentLocations] = useState<string[]>([]);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             kwh: undefined,
-            date: new Date().toISOString().slice(0, 16), // datetime-local format
+            date: new Date().toISOString().slice(0, 16),
             location: "",
             cost: undefined,
             chargerType: "AC",
@@ -51,9 +45,8 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
     });
 
     const watchedKwh = form.watch("kwh");
-    const watchedLocation = form.watch("location");
+    const watchedChargerType = form.watch("chargerType");
 
-    // Fetch user profile for preferences (costPerKwh, currency)
     useEffect(() => {
         const loadProfile = async () => {
             try {
@@ -61,9 +54,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                 if (res.ok) {
                     const data = await res.json();
                     setUserProfile(data);
-
-                    // Auto-fill default location if the user hasn't typed anything yet
-                    if (data.preferences?.autoFillLocation && data.preferences?.defaultLocation) {
+                    if (data.preferences?.defaultLocation) {
                         if (!form.getValues("location")) {
                             form.setValue("location", data.preferences.defaultLocation);
                         }
@@ -74,25 +65,13 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         loadProfile();
     }, [form]);
 
-    // Load suggestions from localStorage
-    useEffect(() => {
-        const saved = localStorage.getItem("volttrack_locations");
-        if (saved) {
-            setRecentLocations(JSON.parse(saved));
-        } else {
-            setRecentLocations(LOCATION_suggestions.slice(0, 3));
-        }
-    }, []);
+    // Fetch user profile for preferences (favorite locations, etc)
 
-    // Auto-calculate cost when kWh changes
     useEffect(() => {
         if (!isAutoCalculating) return;
-
         const costPerKwh = userProfile?.preferences?.costPerKwh || 0;
         if (watchedKwh && costPerKwh > 0 && !Number.isNaN(watchedKwh)) {
-            // Calculate and round to 0 decimal places for IDR, or 2 for others if needed
-            const calculatedCost = Math.round(watchedKwh * costPerKwh);
-            form.setValue("cost", calculatedCost, { shouldValidate: true });
+            form.setValue("cost", Math.round(watchedKwh * costPerKwh), { shouldValidate: true });
         } else if (!watchedKwh) {
             form.setValue("cost", undefined);
         }
@@ -101,10 +80,10 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
     const handleCostManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.valueAsNumber;
         if (!Number.isNaN(val)) {
-            setIsAutoCalculating(false); // Disable auto-calc once user manually overrides it
+            setIsAutoCalculating(false);
             form.setValue("cost", val);
         } else {
-            setIsAutoCalculating(true); // Re-enable if they clear it
+            setIsAutoCalculating(true);
             form.setValue("cost", undefined);
         }
     };
@@ -112,210 +91,344 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
     const onSubmit = async (data: FormValues) => {
         setIsSubmitting(true);
         setSuccessMessage(null);
-
         try {
-            // Fetch CSRF token first
             const csrfRes = await fetch("/api/csrf");
             if (!csrfRes.ok) throw new Error("Failed to get CSRF token");
             const { csrfToken } = await csrfRes.json();
 
             const response = await fetch("/api/sessions", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-csrf-token": csrfToken
-                },
-                body: JSON.stringify({
-                    ...data,
-                    date: new Date(data.date).toISOString()
-                }),
+                headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
+                body: JSON.stringify({ ...data, date: new Date(data.date).toISOString() }),
             });
 
             if (!response.ok) throw new Error("Failed to save session");
 
-            // Save location to localStorage if new
-            const newLocations = Array.from(new Set([data.location.trim(), ...recentLocations])).slice(0, 10);
-            setRecentLocations(newLocations);
-            localStorage.setItem("volttrack_locations", JSON.stringify(newLocations));
-
-            setSuccessMessage("Charging session saved successfully! ⚡");
+            setSuccessMessage("Session logged! ⚡");
             form.reset({
                 kwh: undefined,
                 date: new Date().toISOString().slice(0, 16),
-                location: userProfile?.preferences?.rememberInput ? data.location : "",
+                location: "",
                 cost: undefined,
-                chargerType: userProfile?.preferences?.rememberInput ? data.chargerType : "AC",
+                chargerType: "AC",
                 duration: undefined,
             });
             setIsAutoCalculating(true);
-
             if (onSuccess) onSuccess();
-
-            // Clear success message after 3 seconds
             setTimeout(() => setSuccessMessage(null), 3000);
-
         } catch (error) {
             console.error(error);
-            // handled by generic error for now or toast
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const currencySymbol = userProfile?.preferences?.currency === "USD" ? "$" :
-        userProfile?.preferences?.currency === "EUR" ? "€" : "Rp";
+    const currencySymbol = userProfile?.preferences?.currency === "USD" ? "$"
+        : userProfile?.preferences?.currency === "EUR" ? "€" : "Rp";
+
+    const allLocations = Array.from(new Set([
+        ...LOCATION_suggestions,
+        ...(userProfile?.preferences?.favoriteLocations || []),
+    ]));
 
     return (
-        <Card className="glass-panel relative overflow-visible p-6">
-            <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Quick Add Session</h2>
-                <div className="rounded-full bg-cyan-500/10 p-2 text-cyan-400">
-                    <Zap className="h-5 w-5" />
-                </div>
-            </div>
+        <div className="relative w-full">
+            {/* Ambient glow behind the card */}
+            <div
+                className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-40 w-3/4 rounded-full blur-3xl"
+                style={{ background: "radial-gradient(ellipse, rgba(0,229,195,0.12) 0%, transparent 70%)" }}
+            />
 
-            <AnimatePresence>
-                {successMessage && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute left-0 top-0 z-10 flex w-full items-center justify-center rounded-t-2xl bg-emerald-500/20 py-2 text-sm font-medium text-emerald-400 backdrop-blur-md"
-                    >
-                        {successMessage}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <div
+                className="relative overflow-hidden rounded-3xl p-8"
+                style={{
+                    background: "rgba(18,18,22,0.85)",
+                    backdropFilter: "blur(24px)",
+                    WebkitBackdropFilter: "blur(24px)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    boxShadow: "0 0 0 1px rgba(0,229,195,0.08) inset, 0 32px 64px rgba(0,0,0,0.5)",
+                }}
+            >
+                {/* Top teal glow edge */}
+                <div
+                    className="pointer-events-none absolute inset-x-0 top-0 h-px"
+                    style={{ background: "linear-gradient(90deg, transparent, rgba(0,229,195,0.6), transparent)" }}
+                />
 
-
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
-                {/* Energy (kWh) - Primary Focus */}
-                <div className="space-y-1.5">
-                    <label className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-                        Energy Added
-                    </label>
-                    <div className="relative">
-                        <input
-                            {...form.register("kwh", { valueAsNumber: true })}
-                            type="number"
-                            step="0.01"
-                            autoFocus
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-2xl font-bold text-white placeholder-zinc-700 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20"
-                            placeholder="0.0"
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">
-                            kWh
-                        </span>
-                    </div>
-                    {form.formState.errors.kwh && (
-                        <p className="text-xs text-red-400">{form.formState.errors.kwh.message}</p>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {/* Date */}
-                    <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                            <Calendar className="h-3 w-3" /> Date
-                        </label>
-                        <input
-                            {...form.register("date")}
-                            type="datetime-local"
-                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50"
-                        />
-                    </div>
-
-                    {/* Charger Type */}
-                    <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                            <Plug className="h-3 w-3" /> Type
-                        </label>
-                        <select
-                            {...form.register("chargerType")}
-                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50 [&>option]:bg-zinc-900"
+                {/* Success toast */}
+                <AnimatePresence>
+                    {successMessage && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.96 }}
+                            className="absolute inset-x-0 top-0 z-20 flex items-center justify-center rounded-t-3xl py-3 text-sm font-semibold text-emerald-300"
+                            style={{ background: "rgba(16,185,129,0.15)", backdropFilter: "blur(8px)" }}
                         >
-                            {CHARGER_TYPES.map(type => (
-                                <option key={type} value={type}>{type}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                {/* Location */}
-                <div className="space-y-1.5">
-                    <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                        <MapPin className="h-3 w-3" /> Location
-                    </label>
-                    <select
-                        {...form.register("location")}
-                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50 [&>option]:bg-zinc-900"
-                    >
-                        <option value="" disabled>Select location...</option>
-                        {Array.from(new Set([
-                            ...LOCATION_suggestions,
-                            ...(userProfile?.preferences?.favoriteLocations || [])
-                        ])).map((loc) => (
-                            <option key={loc} value={loc}>{loc}</option>
-                        ))}
-                    </select>
-                    {form.formState.errors.location && (
-                        <p className="text-xs text-red-400">{form.formState.errors.location.message}</p>
+                            {successMessage}
+                        </motion.div>
                     )}
+                </AnimatePresence>
+
+                {/* Header */}
+                <div className="mb-8 flex items-center gap-3">
+                    <motion.div
+                        animate={{ scale: [1, 1.15, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="flex h-10 w-10 items-center justify-center rounded-2xl"
+                        style={{
+                            background: "rgba(0,229,195,0.12)",
+                            boxShadow: "0 0 16px rgba(0,229,195,0.25)",
+                        }}
+                    >
+                        <Zap className="h-5 w-5" style={{ color: "#00E5C3" }} />
+                    </motion.div>
+                    <h2 className="text-2xl font-bold tracking-tight text-white">Log a Charge</h2>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {/* Cost */}
-                    <div className="space-y-1.5 mb-1">
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                                <DollarSign className="h-3 w-3" /> Cost ({userProfile?.preferences?.currency || "IDR"})
-                            </label>
-                            {isAutoCalculating && userProfile?.preferences?.costPerKwh ? (
-                                <span className="text-[10px] text-cyan-500 bg-cyan-500/10 px-1.5 py-0.5 rounded">Auto</span>
-                            ) : null}
-                        </div>
-                        <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">{currencySymbol}</span>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+                    {/* ── Energy Hero Input ── */}
+                    <div className="flex flex-col items-center gap-1">
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                            Energy Added
+                        </label>
+                        <div
+                            className="relative flex w-full items-center justify-center overflow-hidden rounded-2xl transition-all"
+                            style={{
+                                background: "rgba(0,229,195,0.04)",
+                                border: "1.5px solid rgba(0,229,195,0.2)",
+                                boxShadow: "0 0 32px rgba(0,229,195,0.08) inset",
+                            }}
+                        >
                             <input
-                                {...form.register("cost", { valueAsNumber: true })}
+                                {...form.register("kwh", { valueAsNumber: true })}
                                 type="number"
                                 step="0.01"
-                                onChange={handleCostManualChange}
-                                className={`w-full rounded-lg border ${isAutoCalculating && userProfile?.preferences?.costPerKwh ? "border-cyan-500/30 bg-cyan-500/5 text-cyan-100" : "border-white/10 bg-white/5 text-zinc-300"} pl-8 pr-3 py-2 text-sm outline-none focus:border-cyan-500/50 transition-colors`}
-                                placeholder="0"
+                                autoFocus
+                                className="w-full bg-transparent py-6 text-center text-7xl font-bold tracking-tight text-white outline-none placeholder-zinc-800 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                placeholder="0.0"
+                                style={{ caretColor: "#00E5C3" }}
                             />
+                            <span
+                                className="absolute right-6 text-xl font-semibold"
+                                style={{ color: "rgba(0,229,195,0.5)" }}
+                            >
+                                kWh
+                            </span>
+                        </div>
+                        {form.formState.errors.kwh && (
+                            <p className="mt-1 text-xs text-red-400">{form.formState.errors.kwh.message}</p>
+                        )}
+                    </div>
+
+                    {/* ── Date & Charger Type ── */}
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {/* Date */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                <Calendar className="h-3 w-3" /> Date
+                            </label>
+                            <div className="relative">
+                                <input
+                                    {...form.register("date")}
+                                    type="datetime-local"
+                                    className="w-full rounded-2xl px-4 py-3 text-sm text-zinc-300 outline-none transition-all"
+                                    style={{
+                                        background: "rgba(255,255,255,0.04)",
+                                        border: "1px solid rgba(255,255,255,0.08)",
+                                        colorScheme: "dark",
+                                    }}
+                                    onFocus={e => {
+                                        e.currentTarget.style.border = "1px solid rgba(0,229,195,0.4)";
+                                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,229,195,0.08)";
+                                    }}
+                                    onBlur={e => {
+                                        e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)";
+                                        e.currentTarget.style.boxShadow = "none";
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Charger Type toggle */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                <Plug className="h-3 w-3" /> Charger Type
+                            </label>
+                            <div
+                                className="flex gap-2 rounded-2xl p-1"
+                                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                            >
+                                {CHARGER_TYPES.map((type) => {
+                                    const active = watchedChargerType === type;
+                                    return (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => form.setValue("chargerType", type)}
+                                            className="relative flex-1 rounded-xl py-2.5 text-xs font-bold transition-all"
+                                            style={{
+                                                color: active ? "#0F0F12" : "rgba(161,161,170,1)",
+                                                background: active
+                                                    ? "linear-gradient(135deg, #00E5C3, #00c4a8)"
+                                                    : "transparent",
+                                                boxShadow: active ? "0 2px 12px rgba(0,229,195,0.35)" : "none",
+                                            }}
+                                        >
+                                            {type}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Duration */}
-                    <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                            <Clock className="h-3 w-3" /> Duration (min)
+                    {/* ── Location ── */}
+                    <div className="space-y-2">
+                        <label className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                            <MapPin className="h-3 w-3" /> Location
                         </label>
-                        <input
-                            {...form.register("duration", { valueAsNumber: true })}
-                            type="number"
-                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300 outline-none focus:border-cyan-500/50"
-                            placeholder="e.g. 45"
-                        />
+                        <div className="relative">
+                            <MapPin
+                                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2"
+                                style={{ color: "rgba(0,229,195,0.5)" }}
+                            />
+                            <select
+                                {...form.register("location")}
+                                className="w-full appearance-none rounded-2xl py-3 pl-10 pr-4 text-sm text-zinc-300 outline-none transition-all [&>option]:bg-zinc-900"
+                                style={{
+                                    background: "rgba(255,255,255,0.04)",
+                                    border: "1px solid rgba(255,255,255,0.08)",
+                                }}
+                                onFocus={e => {
+                                    e.currentTarget.style.border = "1px solid rgba(0,229,195,0.4)";
+                                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,229,195,0.08)";
+                                }}
+                                onBlur={e => {
+                                    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)";
+                                    e.currentTarget.style.boxShadow = "none";
+                                }}
+                            >
+                                <option value="" disabled>Select location...</option>
+                                {allLocations.map((loc) => (
+                                    <option key={loc} value={loc}>{loc}</option>
+                                ))}
+                            </select>
+                        </div>
+                        {form.formState.errors.location && (
+                            <p className="text-xs text-red-400">{form.formState.errors.location.message}</p>
+                        )}
                     </div>
-                </div>
 
-                <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3 font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                >
-                    {isSubmitting ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" /> Saving...
-                        </>
-                    ) : (
-                        "Save Session"
-                    )}
-                </button>
-            </form>
-        </Card>
+                    {/* ── Cost & Duration ── */}
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {/* Cost */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <label className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                    <span className="text-xs">Rp</span> Cost (IDR)
+                                </label>
+                                {isAutoCalculating && userProfile?.preferences?.costPerKwh ? (
+                                    <span
+                                        className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                                        style={{ background: "rgba(0,229,195,0.1)", color: "#00E5C3" }}
+                                    >
+                                        Auto
+                                    </span>
+                                ) : null}
+                            </div>
+                            <div className="relative">
+                                <span
+                                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold"
+                                    style={{ color: "rgba(245,166,35,0.7)" }}
+                                >
+                                    Rp
+                                </span>
+                                <input
+                                    {...form.register("cost", { valueAsNumber: true })}
+                                    type="number"
+                                    step="1"
+                                    onChange={handleCostManualChange}
+                                    className="w-full rounded-2xl py-3 pl-10 pr-4 text-sm outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                    style={{
+                                        background: isAutoCalculating && userProfile?.preferences?.costPerKwh
+                                            ? "rgba(245,166,35,0.06)"
+                                            : "rgba(255,255,255,0.04)",
+                                        border: isAutoCalculating && userProfile?.preferences?.costPerKwh
+                                            ? "1px solid rgba(245,166,35,0.25)"
+                                            : "1px solid rgba(255,255,255,0.08)",
+                                        color: isAutoCalculating && userProfile?.preferences?.costPerKwh
+                                            ? "#F5A623"
+                                            : "rgb(212,212,216)",
+                                        colorScheme: "dark",
+                                    }}
+                                    placeholder="0"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Duration */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                                <Clock className="h-3 w-3" /> Duration (min)
+                            </label>
+                            <div className="relative">
+                                <Clock
+                                    className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2"
+                                    style={{ color: "rgba(255,255,255,0.15)" }}
+                                />
+                                <input
+                                    {...form.register("duration", { valueAsNumber: true })}
+                                    type="number"
+                                    className="w-full rounded-2xl py-3 pl-10 pr-4 text-sm text-zinc-300 outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                    style={{
+                                        background: "rgba(255,255,255,0.04)",
+                                        border: "1px solid rgba(255,255,255,0.08)",
+                                        colorScheme: "dark",
+                                    }}
+                                    placeholder="e.g. 45"
+                                    onFocus={e => {
+                                        e.currentTarget.style.border = "1px solid rgba(0,229,195,0.4)";
+                                        e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,229,195,0.08)";
+                                    }}
+                                    onBlur={e => {
+                                        e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)";
+                                        e.currentTarget.style.boxShadow = "none";
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Save Button ── */}
+                    <motion.button
+                        type="submit"
+                        disabled={isSubmitting}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="group relative mt-2 flex h-14 w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl font-bold text-base tracking-wide text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                            background: "linear-gradient(135deg, #00E5C3 0%, #0066FF 100%)",
+                            boxShadow: "0 8px 32px rgba(0,229,195,0.3), 0 2px 8px rgba(0,102,255,0.2)",
+                        }}
+                    >
+                        {/* Shimmer overlay */}
+                        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <Zap className="h-5 w-5" />
+                                Save Session
+                            </>
+                        )}
+                    </motion.button>
+                </form>
+            </div>
+        </div>
     );
 }

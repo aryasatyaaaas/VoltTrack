@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Header } from "@/components/layout/Header";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { EVPreferencesCard } from "@/components/profile/EVPreferencesCard";
-import { DataSettingsCard } from "@/components/profile/DataSettingsCard";
 import { DangerZone } from "@/components/profile/DangerZone";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -66,12 +64,6 @@ export default function ProfilePage() {
         setProfile((prev) => prev ? { ...prev, preferences: updated } : prev);
     };
 
-    const handleTogglePreference = async (
-        key: keyof Pick<UserPreferencesData, "rememberInput" | "autoFillLocation" | "smartInsights">,
-        value: boolean
-    ) => {
-        await handleSavePreferences({ [key]: value });
-    };
 
     const handleDeleteAccount = async (password: string) => {
         const csrfRes = await fetch("/api/csrf");
@@ -96,71 +88,49 @@ export default function ProfilePage() {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen flex-col">
-                <Header title="Profile" subtitle="Manage your account" />
-                <div className="flex flex-1 items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-zinc-600" />
-                </div>
+            <div className="flex flex-1 items-center justify-center py-24">
+                <Loader2 className="h-8 w-8 animate-spin text-zinc-600" />
             </div>
         );
     }
 
     if (error || !profile) {
         return (
-            <div className="flex min-h-screen flex-col">
-                <Header title="Profile" subtitle="Manage your account" />
-                <div className="flex flex-1 items-center justify-center p-4">
-                    <p className="text-sm text-red-400">{error || "Something went wrong."}</p>
-                </div>
+            <div className="flex flex-1 items-center justify-center p-4">
+                <p className="text-sm text-red-400">{error || "Something went wrong."}</p>
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen flex-col">
-            <Header title="Profile" subtitle="Manage your account" />
+        <div className="space-y-6">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+            >
+                <ProfileHeader profile={profile} onUpdate={handleUpdateName} />
+            </motion.div>
 
-            <main className="flex-1 space-y-6 p-4 md:p-8 pb-24 md:pb-8">
-                <div className="mx-auto max-w-2xl space-y-6">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <ProfileHeader profile={profile} onUpdate={handleUpdateName} />
-                    </motion.div>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.05 }}
+            >
+                <EVPreferencesCard
+                    preferences={profile.preferences}
+                    onSave={handleSavePreferences}
+                />
+            </motion.div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.05 }}
-                    >
-                        <EVPreferencesCard
-                            preferences={profile.preferences}
-                            onSave={handleSavePreferences}
-                        />
-                    </motion.div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.1 }}
-                    >
-                        <DataSettingsCard
-                            preferences={profile.preferences}
-                            onToggle={handleTogglePreference}
-                        />
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.15 }}
-                    >
-                        <DangerZone onDeleteAccount={handleDeleteAccount} />
-                    </motion.div>
-                </div>
-            </main>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.15 }}
+            >
+                <DangerZone onDeleteAccount={handleDeleteAccount} />
+            </motion.div>
         </div>
     );
 }

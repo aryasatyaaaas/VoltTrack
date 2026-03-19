@@ -9,21 +9,21 @@ const steps = [
         icon: Plus,
         title: "Add Your Session",
         description: "Log your charging session with energy, cost, location, and charger type.",
-        color: "from-cyan-500 to-cyan-600",
+        color: "from-[#00E5C3] to-[#0066FF]",
     },
     {
         num: "02",
         icon: BarChart3,
         title: "Track Usage & Cost",
         description: "See real-time dashboards with weekly trends, cost breakdowns, and energy stats.",
-        color: "from-blue-500 to-blue-600",
+        color: "from-[#0066FF] to-blue-700",
     },
     {
         num: "03",
         icon: Lightbulb,
         title: "Get Smart Insights",
         description: "Receive AI-powered tips to optimize charging habits and reduce costs.",
-        color: "from-purple-500 to-purple-600",
+        color: "from-[#F5A623] to-amber-600",
     },
 ];
 
@@ -32,7 +32,7 @@ export function HowItWorks() {
         <section className="relative px-6 py-24">
             {/* Background accent */}
             <div className="pointer-events-none absolute inset-0">
-                <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/[0.04] blur-[120px]" />
+                <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00E5C3]/[0.03] blur-[120px]" />
             </div>
 
             <div className="relative mx-auto max-w-4xl">

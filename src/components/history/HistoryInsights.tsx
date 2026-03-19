@@ -1,6 +1,7 @@
 "use client";
 
 import { Lightbulb } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface HistoryInsightsProps {
     insights: string[];
@@ -10,15 +11,24 @@ export function HistoryInsights({ insights }: HistoryInsightsProps) {
     if (insights.length === 0) return null;
 
     return (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
             {insights.map((insight, i) => (
-                <div
+                <motion.div
                     key={i}
-                    className="flex items-center gap-2 rounded-full border border-cyan-500/10 bg-cyan-500/5 px-3 py-1.5 text-xs font-medium text-cyan-300"
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.07 }}
+                    className="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium"
+                    style={{
+                        background: "rgba(0,229,195,0.06)",
+                        border: "1px solid rgba(0,229,195,0.18)",
+                        color: "#a0f0e4",
+                        backdropFilter: "blur(8px)",
+                    }}
                 >
-                    <Lightbulb className="h-3 w-3 text-cyan-400" />
+                    <Lightbulb className="h-3 w-3 shrink-0" style={{ color: "#00E5C3" }} />
                     {insight}
-                </div>
+                </motion.div>
             ))}
         </div>
     );

@@ -1,18 +1,17 @@
 "use client";
 
+import { Header } from "@/components/layout/Header";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex h-screen flex-col overflow-hidden text-zinc-100 bg-black">
-            {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto overflow-x-hidden pb-20 md:pb-0 scrollbar-hide">
-                <div className="mx-auto max-w-screen-2xl p-4 md:p-6 lg:p-8">
+        <div className="flex min-h-screen flex-col" style={{ background: "#0F0F12" }}>
+            <Header />
+            <main className="flex-1 overflow-x-hidden pb-24 md:pb-12">
+                <div className="mx-auto max-w-2xl px-4 py-6 md:px-0">
                     {children}
                 </div>
             </main>
-
-            {/* Mobile Bottom Navigation (Floating) */}
             <MobileBottomNav />
         </div>
     );

@@ -9,8 +9,8 @@ export function HeroSection() {
         <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-20">
             {/* Ambient background effects */}
             <div className="pointer-events-none absolute inset-0">
-                <div className="absolute left-1/2 top-1/4 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-cyan-500/[0.07] blur-[120px]" />
-                <div className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-blue-600/[0.05] blur-[100px]" />
+                <div className="absolute left-1/2 top-1/4 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#00E5C3]/[0.05] blur-[120px]" />
+                <div className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-[#0066FF]/[0.03] blur-[100px]" />
             </div>
 
             <div className="relative z-10 mx-auto max-w-6xl">
@@ -22,14 +22,14 @@ export function HeroSection() {
                         transition={{ duration: 0.7 }}
                         className="text-center lg:text-left"
                     >
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1.5 text-xs font-medium text-cyan-400">
-                            <Zap className="h-3.5 w-3.5" />
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#00E5C3]/20 bg-[#00E5C3]/10 px-4 py-1.5 text-xs font-medium text-[#00E5C3]">
+                            <Zap className="h-3.5 w-3.5 fill-[#00E5C3]" />
                             Smart EV Charging Tracker
                         </div>
 
                         <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
                             Track Your EV Charging.{" "}
-                            <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-[#00E5C3] to-[#0066FF] bg-clip-text text-transparent">
                                 Smarter.
                             </span>
                         </h1>
@@ -42,7 +42,7 @@ export function HeroSection() {
                         <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start">
                             <Link
                                 href="/register"
-                                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-95"
+                                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00E5C3] to-[#0066FF] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#00E5C3]/20 transition-all hover:shadow-[#00E5C3]/30 hover:scale-[1.02] active:scale-95"
                             >
                                 Get Started Free
                                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -75,12 +75,12 @@ export function HeroSection() {
                             {/* Stats Row */}
                             <div className="grid grid-cols-3 gap-3">
                                 {[
-                                    { icon: Zap, label: "This Week", value: "134 kWh", color: "text-cyan-400" },
-                                    { icon: DollarSign, label: "Cost", value: "Rp 779K", color: "text-emerald-400" },
+                                    { icon: Zap, label: "This Week", value: "134 kWh", color: "text-[#00E5C3]" },
+                                    { icon: DollarSign, label: "Cost", value: "Rp 779K", color: "text-[#F5A623]" },
                                     { icon: TrendingUp, label: "Trend", value: "+12.5%", color: "text-blue-400" },
                                 ].map((stat) => (
                                     <div key={stat.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                                        <stat.icon className={`mb-1.5 h-4 w-4 ${stat.color}`} />
+                                        <stat.icon className={`mb-1.5 h-4 w-4 ${stat.color} ${stat.label === 'This Week' ? 'fill-[#00E5C3]' : ''}`} />
                                         <p className="text-[10px] text-zinc-500">{stat.label}</p>
                                         <p className="text-sm font-bold text-white">{stat.value}</p>
                                     </div>
@@ -97,7 +97,7 @@ export function HeroSection() {
                                             initial={{ height: 0 }}
                                             animate={{ height: `${h}%` }}
                                             transition={{ duration: 0.6, delay: 0.4 + i * 0.08 }}
-                                            className="flex-1 rounded-t-md bg-gradient-to-t from-cyan-500/30 to-cyan-500/60"
+                                            className="flex-1 rounded-t-md bg-gradient-to-t from-[#00E5C3]/20 to-[#00E5C3]/50"
                                         />
                                     ))}
                                 </div>
@@ -105,7 +105,7 @@ export function HeroSection() {
                         </div>
 
                         {/* Glow effect behind card */}
-                        <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-r from-cyan-500/10 to-blue-600/10 blur-2xl" />
+                        <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-r from-[#00E5C3]/10 to-[#0066FF]/10 blur-2xl" />
                     </motion.div>
                 </div>
             </div>

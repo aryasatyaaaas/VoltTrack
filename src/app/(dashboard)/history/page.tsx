@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Header } from "@/components/layout/Header";
 import { HistorySummary } from "@/components/history/HistorySummary";
 import { HistoryFilters } from "@/components/history/HistoryFilters";
 import { HistorySessionCard } from "@/components/history/HistorySessionCard";
 import { SessionDetailModal } from "@/components/history/SessionDetailModal";
 import { HistoryInsights } from "@/components/history/HistoryInsights";
-import { motion } from "framer-motion";
-import { Loader2, BatteryCharging, Plus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Plug, Plus, Zap } from "lucide-react";
 import Link from "next/link";
 import type {
     HistorySession,
@@ -24,6 +23,21 @@ const initialFilters: HistoryFiltersState = {
     chargerType: "all",
     search: "",
 };
+
+/** Group sessions by their date label (e.g. "Mar 19, 2026") */
+function groupByDate(sessions: HistorySession[]): { label: string; sessions: HistorySession[] }[] {
+    const groups: Map<string, HistorySession[]> = new Map();
+    for (const s of sessions) {
+        const label = new Date(s.sessionDate).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
+        if (!groups.has(label)) groups.set(label, []);
+        groups.get(label)!.push(s);
+    }
+    return Array.from(groups.entries()).map(([label, sessions]) => ({ label, sessions }));
+}
 
 export default function HistoryPage() {
     const [sessions, setSessions] = useState<HistorySession[]>([]);
@@ -71,7 +85,7 @@ export default function HistoryPage() {
                 setHasMore(data.pagination.hasMore);
                 setPage(pageNum);
             } catch {
-                // Error handled silently
+                // handled silently
             } finally {
                 setLoading(false);
                 setLoadingMore(false);
@@ -95,134 +109,180 @@ export default function HistoryPage() {
     const handleUpdate = async (id: string, data: Partial<HistorySession>) => {
         const csrfRes = await fetch("/api/csrf");
         const { csrfToken } = await csrfRes.json();
-
         const res = await fetch(`/api/history/${id}`, {
             method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                "x-csrf-token": csrfToken
-            },
+            headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
             body: JSON.stringify(data),
         });
         if (!res.ok) throw new Error("Failed to update");
-        fetchHistory(1); // Refresh
+        fetchHistory(1);
         setSelectedSession(null);
     };
 
     const handleDelete = async (id: string) => {
         const csrfRes = await fetch("/api/csrf");
         const { csrfToken } = await csrfRes.json();
-
         const res = await fetch(`/api/history/${id}`, {
             method: "DELETE",
-            headers: { "x-csrf-token": csrfToken }
+            headers: { "x-csrf-token": csrfToken },
         });
         if (!res.ok) throw new Error("Failed to delete");
-        fetchHistory(1); // Refresh
+        fetchHistory(1);
     };
 
     if (loading) {
         return (
-            <div className="flex min-h-screen flex-col">
-                <Header title="History" subtitle="Your charging sessions" />
-                <div className="flex flex-1 items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-zinc-600" />
-                </div>
+            <div className="flex flex-1 items-center justify-center py-24">
+                <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#00E5C3" }} />
             </div>
         );
     }
 
+    const grouped = groupByDate(sessions);
+
     return (
-        <div className="flex min-h-screen flex-col">
-            <Header title="History" subtitle="Your charging sessions" />
-
-            <main className="flex-1 space-y-6 p-4 pb-24 md:p-8 md:pb-8">
-                {/* Insights */}
-                {insights.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <HistoryInsights insights={insights} />
-                    </motion.div>
-                )}
-
-                {/* Summary */}
+        <div className="space-y-7">
+            {/* Insight pills */}
+            {insights.length > 0 && (
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.05 }}
+                    transition={{ duration: 0.3 }}
                 >
-                    <HistorySummary summary={summary} />
+                    <HistoryInsights insights={insights} />
                 </motion.div>
+            )}
 
-                {/* Filters */}
+            {/* Bento stat grid — "Your Journey" */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.05 }}
+            >
+                <HistorySummary summary={summary} />
+            </motion.div>
+
+            {/* Search + Filters */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.1 }}
+            >
+                <HistoryFilters filters={filters} onChange={handleFilterChange} />
+            </motion.div>
+
+            {/* All Sessions */}
+            {sessions.length === 0 ? (
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center py-20 text-center"
                 >
-                    <HistoryFilters filters={filters} onChange={handleFilterChange} />
-                </motion.div>
-
-                {/* Sessions */}
-                {sessions.length === 0 ? (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex flex-col items-center justify-center py-16 text-center"
+                    <div
+                        className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl"
+                        style={{
+                            background: "rgba(0,229,195,0.06)",
+                            boxShadow: "0 0 40px rgba(0,229,195,0.12)",
+                        }}
                     >
-                        <div className="mb-4 rounded-2xl bg-white/[0.03] p-6">
-                            <BatteryCharging className="h-12 w-12 text-zinc-700" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-zinc-400">
-                            No charging history yet
-                        </h3>
-                        <p className="mt-1 text-sm text-zinc-600">
-                            Start your first charging session to see it here
-                        </p>
-                        <Link
-                            href="/charging"
-                            className="mt-6 flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:scale-[1.02]"
+                        <Plug className="h-10 w-10" style={{ color: "rgba(0,229,195,0.5)" }} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">No sessions yet</h3>
+                    <p className="mt-1 text-sm" style={{ color: "rgba(113,113,122,1)" }}>
+                        Start charging — your history will appear here.
+                    </p>
+                    <Link
+                        href="/charging"
+                        className="mt-6 flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold text-white transition hover:scale-[1.03]"
+                        style={{
+                            background: "linear-gradient(135deg, #00E5C3 0%, #0066FF 100%)",
+                            boxShadow: "0 8px 24px rgba(0,229,195,0.25)",
+                        }}
+                    >
+                        <Zap className="h-4 w-4" /> Log First Session
+                    </Link>
+                </motion.div>
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.35, delay: 0.15 }}
+                    className="space-y-1"
+                >
+                    {/* Section header */}
+                    <div className="flex items-center gap-4 pb-2">
+                        <span
+                            className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                            style={{ color: "rgba(63,63,70,1)" }}
                         >
-                            <Plus className="h-4 w-4" /> New Session
-                        </Link>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3, delay: 0.15 }}
-                        className="space-y-2"
-                    >
-                        {sessions.map((session) => (
-                            <HistorySessionCard
-                                key={session.id}
-                                session={session}
-                                onClick={() => setSelectedSession(session)}
-                            />
-                        ))}
+                            All Sessions
+                        </span>
+                        <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.05)" }} />
+                        <span
+                            className="text-[10px] font-medium"
+                            style={{ color: "rgba(63,63,70,1)" }}
+                        >
+                            {sessions.length} total
+                        </span>
+                    </div>
 
-                        {/* Load More */}
-                        {hasMore && (
-                            <div className="flex justify-center pt-4">
-                                <button
-                                    onClick={handleLoadMore}
-                                    disabled={loadingMore}
-                                    className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-medium text-zinc-300 transition hover:bg-white/10 disabled:opacity-50"
-                                >
-                                    {loadingMore ? (
-                                        <><Loader2 className="h-4 w-4 animate-spin" /> Loading...</>
-                                    ) : (
-                                        "Load More"
-                                    )}
-                                </button>
-                            </div>
-                        )}
-                    </motion.div>
-                )}
-            </main>
+                    {/* Date-grouped sessions */}
+                    <AnimatePresence mode="popLayout">
+                        {grouped.map((group, gi) => (
+                            <motion.div
+                                key={group.label}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: gi * 0.04 }}
+                                className="space-y-2"
+                            >
+                                {/* Date divider label */}
+                                <div className="flex items-center gap-3 pt-3">
+                                    <span
+                                        className="text-[10px] font-bold uppercase tracking-[0.15em]"
+                                        style={{ color: "rgba(82,82,91,1)" }}
+                                    >
+                                        {group.label}
+                                    </span>
+                                    <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.04)" }} />
+                                </div>
+
+                                {/* Session cards for this date */}
+                                {group.sessions.map((session) => (
+                                    <HistorySessionCard
+                                        key={session.id}
+                                        session={session}
+                                        onClick={() => setSelectedSession(session)}
+                                    />
+                                ))}
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+
+                    {/* Load more */}
+                    {hasMore && (
+                        <div className="flex justify-center pt-6">
+                            <button
+                                onClick={handleLoadMore}
+                                disabled={loadingMore}
+                                className="flex items-center gap-2 rounded-2xl px-8 py-3 text-sm font-semibold text-zinc-300 transition hover:text-white disabled:opacity-50"
+                                style={{
+                                    background: "rgba(255,255,255,0.04)",
+                                    border: "1px solid rgba(255,255,255,0.08)",
+                                }}
+                            >
+                                {loadingMore ? (
+                                    <><Loader2 className="h-4 w-4 animate-spin" /> Loading...</>
+                                ) : (
+                                    <>
+                                        <Plus className="h-4 w-4" /> Load More
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
+                </motion.div>
+            )}
 
             {/* Detail Modal */}
             <SessionDetailModal

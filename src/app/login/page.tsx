@@ -61,13 +61,13 @@ export default function LoginPage() {
         <div className="relative flex min-h-screen items-center justify-center px-4">
             {/* Ambient glow */}
             <div className="pointer-events-none absolute inset-0">
-                <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-cyan-500/[0.06] blur-[120px]" />
+                <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-[#00E5C3]/[0.05] blur-[120px]" />
             </div>
 
             {/* Back Button */}
             <Link
                 href="/"
-                className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-4 py-2 text-sm font-medium text-zinc-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-white md:left-8 md:top-8"
+                className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-4 py-2 text-sm font-medium text-zinc-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-[#00E5C3] md:left-8 md:top-8"
             >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Home
@@ -80,17 +80,17 @@ export default function LoginPage() {
                 className="relative w-full max-w-md"
             >
                 {/* Logo */}
-                <Link href="/" className="mb-8 flex items-center justify-center gap-2.5">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25">
-                        <Zap className="h-6 w-6 text-white" />
+                <Link href="/" className="mb-8 flex items-center justify-center gap-2.5 group">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#00E5C3]/15 ring-1 ring-[#00E5C3]/30 transition-all group-hover:bg-[#00E5C3]/25">
+                        <Zap className="h-6 w-6 text-[#00E5C3] fill-[#00E5C3]" />
                     </div>
                     <span className="text-xl font-bold tracking-tight text-white">
-                        Volt<span className="text-cyan-400">Track</span>
+                        Volt<span className="text-[#00E5C3]">Track</span>
                     </span>
                 </Link>
 
                 {/* Card */}
-                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 shadow-2xl shadow-black/50 backdrop-blur-xl">
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 shadow-2xl shadow-black/80 backdrop-blur-xl ring-1 ring-white/10">
                     <div className="mb-6 text-center">
                         <h1 className="text-2xl font-bold text-white">Welcome back</h1>
                         <p className="mt-1 text-sm text-zinc-500">Sign in to your account</p>
@@ -116,7 +116,7 @@ export default function LoginPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="you@example.com"
-                                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-cyan-500/50 focus:bg-white/[0.05]"
+                                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-[#00E5C3]/50 focus:bg-white/[0.05]"
                             />
                         </div>
 
@@ -129,7 +129,7 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 pr-12 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-cyan-500/50 focus:bg-white/[0.05]"
+                                    className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 pr-12 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-[#00E5C3]/50 focus:bg-white/[0.05]"
                                 />
                                 <button
                                     type="button"
@@ -148,11 +148,11 @@ export default function LoginPage() {
                                     type="checkbox"
                                     checked={remember}
                                     onChange={(e) => setRemember(e.target.checked)}
-                                    className="h-3.5 w-3.5 rounded border-white/20 bg-white/5 text-cyan-500 accent-cyan-500"
+                                    className="h-3.5 w-3.5 rounded border-white/20 bg-white/5 text-[#00E5C3] accent-[#00E5C3]"
                                 />
                                 <span className="text-xs text-zinc-500">Remember me</span>
                             </label>
-                            <a href="#" className="text-xs text-cyan-500 transition-colors hover:text-cyan-400">
+                            <a href="#" className="text-xs text-[#00E5C3] transition-colors hover:text-[#00E5C3]/80">
                                 Forgot password?
                             </a>
                         </div>
@@ -161,7 +161,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all hover:shadow-cyan-500/30 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none"
+                            className="w-full rounded-xl bg-gradient-to-r from-[#00E5C3] to-[#0066FF] py-3 text-sm font-semibold text-white shadow-lg shadow-[#00E5C3]/20 transition-all hover:shadow-[#00E5C3]/30 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none"
                         >
                             {loading ? (
                                 <Loader2 className="mx-auto h-5 w-5 animate-spin" />
@@ -173,7 +173,7 @@ export default function LoginPage() {
 
                     <p className="mt-6 text-center text-sm text-zinc-600">
                         Don&apos;t have an account?{" "}
-                        <Link href="/register" className="font-medium text-cyan-500 transition-colors hover:text-cyan-400">
+                        <Link href="/register" className="font-medium text-[#00E5C3] transition-colors hover:text-[#00E5C3]/80">
                             Register
                         </Link>
                     </p>

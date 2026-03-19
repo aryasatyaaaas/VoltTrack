@@ -12,9 +12,6 @@ export const metadata: Metadata = {
   title: "VoltTrack — EV Charging Tracker",
   description:
     "Track your electric vehicle charging sessions, energy usage, and costs with VoltTrack.",
-  icons: {
-    icon: "/favicon.ico",
-  },
 };
 
 import { CsrfProvider } from "@/components/auth/CsrfProvider";

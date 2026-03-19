@@ -18,7 +18,7 @@ function getPasswordStrength(password: string): { score: number; label: string; 
     if (score <= 2) return { score: 2, label: "Fair", color: "bg-orange-500" };
     if (score <= 3) return { score: 3, label: "Good", color: "bg-yellow-500" };
     if (score <= 4) return { score: 4, label: "Strong", color: "bg-emerald-500" };
-    return { score: 5, label: "Very Strong", color: "bg-cyan-500" };
+    return { score: 5, label: "Very Strong", color: "bg-[#00E5C3]" };
 }
 
 export default function RegisterPage() {
@@ -97,13 +97,13 @@ export default function RegisterPage() {
         <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
             {/* Ambient glow */}
             <div className="pointer-events-none absolute inset-0">
-                <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-blue-600/[0.06] blur-[120px]" />
+                <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-[#00E5C3]/[0.05] blur-[120px]" />
             </div>
 
             {/* Back Button */}
             <Link
                 href="/"
-                className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-4 py-2 text-sm font-medium text-zinc-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-white md:left-8 md:top-8"
+                className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-4 py-2 text-sm font-medium text-zinc-400 backdrop-blur-md transition-all hover:bg-white/10 hover:text-[#00E5C3] md:left-8 md:top-8"
             >
                 <ArrowLeft className="h-4 w-4" />
                 Back to Home
@@ -116,17 +116,17 @@ export default function RegisterPage() {
                 className="relative w-full max-w-md"
             >
                 {/* Logo */}
-                <Link href="/" className="mb-8 flex items-center justify-center gap-2.5">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25">
-                        <Zap className="h-6 w-6 text-white" />
+                <Link href="/" className="mb-8 flex items-center justify-center gap-2.5 group">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#00E5C3]/15 ring-1 ring-[#00E5C3]/30 transition-all group-hover:bg-[#00E5C3]/25">
+                        <Zap className="h-6 w-6 text-[#00E5C3] fill-[#00E5C3]" />
                     </div>
                     <span className="text-xl font-bold tracking-tight text-white">
-                        Volt<span className="text-cyan-400">Track</span>
+                        Volt<span className="text-[#00E5C3]">Track</span>
                     </span>
                 </Link>
 
                 {/* Card */}
-                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 shadow-2xl shadow-black/50 backdrop-blur-xl">
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 shadow-2xl shadow-black/80 backdrop-blur-xl ring-1 ring-white/10">
                     <div className="mb-6 text-center">
                         <h1 className="text-2xl font-bold text-white">Create your account</h1>
                         <p className="mt-1 text-sm text-zinc-500">Start tracking your EV charging</p>
@@ -152,7 +152,7 @@ export default function RegisterPage() {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="John Doe"
-                                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-cyan-500/50 focus:bg-white/[0.05]"
+                                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-[#00E5C3]/50 focus:bg-white/[0.05]"
                             />
                         </div>
 
@@ -164,7 +164,7 @@ export default function RegisterPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="you@example.com"
-                                className={`w-full rounded-xl border bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:bg-white/[0.05] ${!emailValid ? "border-red-500/50" : "border-white/[0.08] focus:border-cyan-500/50"
+                                className={`w-full rounded-xl border bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:bg-white/[0.05] ${!emailValid ? "border-red-500/50" : "border-white/[0.08] focus:border-[#00E5C3]/50"
                                     }`}
                             />
                             {!emailValid && (
@@ -181,7 +181,7 @@ export default function RegisterPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Min. 6 characters"
-                                    className={`w-full rounded-xl border bg-white/[0.03] px-4 py-3 pr-12 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:bg-white/[0.05] ${!passwordLong ? "border-red-500/50" : "border-white/[0.08] focus:border-cyan-500/50"
+                                    className={`w-full rounded-xl border bg-white/[0.03] px-4 py-3 pr-12 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:bg-white/[0.05] ${!passwordLong ? "border-red-500/50" : "border-white/[0.08] focus:border-[#00E5C3]/50"
                                         }`}
                                 />
                                 <button
@@ -220,7 +220,7 @@ export default function RegisterPage() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="Repeat your password"
-                                className={`w-full rounded-xl border bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:bg-white/[0.05] ${!passwordMatch ? "border-red-500/50" : "border-white/[0.08] focus:border-cyan-500/50"
+                                className={`w-full rounded-xl border bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:bg-white/[0.05] ${!passwordMatch ? "border-red-500/50" : "border-white/[0.08] focus:border-[#00E5C3]/50"
                                     }`}
                             />
                             {confirmPassword && (
@@ -241,7 +241,7 @@ export default function RegisterPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all hover:shadow-cyan-500/30 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none"
+                            className="w-full rounded-xl bg-gradient-to-r from-[#00E5C3] to-[#0066FF] py-3 text-sm font-semibold text-white shadow-lg shadow-[#00E5C3]/20 transition-all hover:shadow-[#00E5C3]/30 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:pointer-events-none"
                         >
                             {loading ? (
                                 <Loader2 className="mx-auto h-5 w-5 animate-spin" />
@@ -253,7 +253,7 @@ export default function RegisterPage() {
 
                     <p className="mt-6 text-center text-sm text-zinc-600">
                         Already have an account?{" "}
-                        <Link href="/login" className="font-medium text-cyan-500 transition-colors hover:text-cyan-400">
+                        <Link href="/login" className="font-medium text-[#00E5C3] transition-colors hover:text-[#00E5C3]/80">
                             Sign In
                         </Link>
                     </p>

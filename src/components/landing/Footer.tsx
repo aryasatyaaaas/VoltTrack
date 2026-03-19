@@ -6,19 +6,19 @@ export function Footer() {
         <footer className="border-t border-white/[0.06] px-6 py-12">
             <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600">
-                        <Zap className="h-4 w-4 text-white" />
+                <Link href="/" className="flex items-center gap-2 group">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#00E5C3]/15 ring-1 ring-[#00E5C3]/30 transition-all group-hover:bg-[#00E5C3]/25">
+                        <Zap className="h-4 w-4 text-[#00E5C3] fill-[#00E5C3]" />
                     </div>
                     <span className="text-sm font-bold text-white">
-                        Volt<span className="text-cyan-400">Track</span>
+                        Volt<span className="text-[#00E5C3]">Track</span>
                     </span>
                 </Link>
 
                 {/* Links */}
                 <div className="flex items-center gap-8">
                     {["About", "Privacy", "Contact"].map((link) => (
-                        <a key={link} href="#" className="text-xs text-zinc-600 transition-colors hover:text-zinc-400">
+                        <a key={link} href="#" className="text-xs text-zinc-600 transition-colors hover:text-[#00E5C3]">
                             {link}
                         </a>
                     ))}
