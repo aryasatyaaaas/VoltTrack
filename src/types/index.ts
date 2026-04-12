@@ -5,9 +5,9 @@ export interface DashboardData {
         trendPercentage: number;
         insightText: string;
         cost: number;
-        sessionsThisWeek: number;
-        lastWeekCost: number;
-        lastWeekSessions: number;
+        sessionsThisMonth: number;
+        lastMonthCost: number;
+        lastMonthSessions: number;
         totalSessions: number;
         totalKwh: number;
         totalCost: number;

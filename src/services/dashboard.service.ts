@@ -325,10 +325,10 @@ function getSmartInsights(
     stories.push({
         id: "sessions-week",
         icon: "zap",
-        text: heroData.sessionsThisWeek > 0
-            ? `You've completed ${heroData.sessionsThisWeek} session${heroData.sessionsThisWeek > 1 ? "s" : ""} this week.`
-            : "No charging sessions this week yet — time to plug in?",
-        type: heroData.sessionsThisWeek > 0 ? "neutral" : "negative",
+        text: heroData.sessionsThisMonth > 0
+            ? `You've completed ${heroData.sessionsThisMonth} session${heroData.sessionsThisMonth > 1 ? "s" : ""} this month.`
+            : "No charging sessions this month yet — time to plug in?",
+        type: heroData.sessionsThisMonth > 0 ? "neutral" : "negative",
     });
 
     if (heroData.totalSessions > 5) {
