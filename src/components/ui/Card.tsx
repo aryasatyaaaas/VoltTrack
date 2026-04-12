@@ -10,11 +10,12 @@ export function Card({ children, className, glow = false }: CardProps) {
     return (
         <div
             className={cn(
-                "relative rounded-xl border border-white/[0.08] bg-white/[0.03] p-6 backdrop-blur-xl",
-                "shadow-[0_4px_24px_-4px_rgba(0,0,0,0.3)]",
-                "transition-all duration-300 hover:bg-white/[0.08] hover:border-white/[0.15]",
+                "relative rounded-3xl border bg-white p-6 transition-all duration-300",
+                "border-[var(--border)]",
+                "shadow-sm",
+                "hover:shadow-md",
                 glow &&
-                "before:absolute before:inset-0 before:-z-10 before:rounded-xl before:bg-gradient-to-br before:from-cyan-500/10 before:to-blue-500/5 before:blur-xl",
+                "before:absolute before:-inset-4 before:-z-10 before:rounded-[2rem] before:bg-[radial-gradient(ellipse,rgba(255,107,53,0.15)_0%,transparent_60%)] before:blur-xl",
                 className
             )}
         >

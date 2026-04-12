@@ -17,7 +17,7 @@ export interface DashboardData {
     weeklyTrend: { week: string; kwh: number; cost: number }[];
     timeline: TimelineItem[];
     energyBreakdown: {
-        locationBreakdown: { name: string; kwh: number; percent: number }[];
+        locationBreakdown: { name: string; kwh: number; percent: number; count: number }[];
         chargerBreakdown: { name: string; kwh: number; percent: number }[];
         costByLocation: { name: string; cost: number; percent: number }[];
     };

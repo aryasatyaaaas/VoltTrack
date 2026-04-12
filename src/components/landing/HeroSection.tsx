@@ -2,112 +2,88 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Zap, TrendingUp, DollarSign } from "lucide-react";
+import { ArrowRight, Zap, BatteryCharging, ChartBar } from "lucide-react";
 
 export function HeroSection() {
     return (
-        <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-20">
-            {/* Ambient background effects */}
-            <div className="pointer-events-none absolute inset-0">
-                <div className="absolute left-1/2 top-1/4 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#00E5C3]/[0.05] blur-[120px]" />
-                <div className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-[#0066FF]/[0.03] blur-[100px]" />
+        <section className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-16 text-center">
+            {/* Ambient Background Gradient Mesh */}
+            <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+                <div className="absolute left-1/2 top-0 h-[600px] w-[800px] -translate-x-1/2 rounded-full opacity-20 blur-[100px]" style={{ background: "radial-gradient(circle, var(--volt-yellow) 0%, transparent 60%)" }} />
+                <div className="absolute right-0 top-1/4 h-[500px] w-[600px] rounded-full opacity-15 blur-[120px]" style={{ background: "radial-gradient(circle, var(--volt-orange) 0%, transparent 70%)" }} />
+                <div className="absolute left-0 bottom-0 h-[400px] w-[500px] rounded-full opacity-10 blur-[100px]" style={{ background: "radial-gradient(circle, var(--volt-teal) 0%, transparent 70%)" }} />
             </div>
 
-            <div className="relative z-10 mx-auto max-w-6xl">
-                <div className="grid items-center gap-16 lg:grid-cols-2">
-                    {/* Left: Text */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7 }}
-                        className="text-center lg:text-left"
+            <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-8 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold"
+                    style={{ background: "rgba(255, 107, 53, 0.1)", color: "var(--volt-orange)" }}
+                >
+                    <Zap className="h-4 w-4" fill="currentColor" />
+                    Smart Energy for the Future
+                </motion.div>
+
+                <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="text-5xl font-extrabold leading-[1.1] tracking-tight sm:text-6xl md:text-7xl"
+                    style={{ color: "var(--ink)", fontFamily: "var(--font-jakarta)" }}
+                >
+                    Track Your EV Charging.<br />
+                    <span style={{ color: "var(--volt-orange)" }}>Smarter.</span>
+                </motion.h1>
+
+                <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="mt-6 max-w-xl text-lg md:text-xl leading-relaxed"
+                    style={{ color: "var(--ink-muted)" }}
+                >
+                    Monitor energy, track costs, and optimize your EV charging instantly — no fuss.
+                </motion.p>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="mt-10 gap-4 flex flex-col sm:flex-row w-full sm:w-auto"
+                >
+                    <Link
+                        href="/register"
+                        className="group flex w-full items-center justify-center gap-2 rounded-xl px-8 py-4 text-[15px] font-bold text-white shadow-lg transition-all hover:scale-105 sm:w-auto"
+                        style={{ background: "linear-gradient(135deg, #FF6B35, #FFD93D)", boxShadow: "0 8px 24px rgba(255,107,53,0.3)" }}
                     >
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#00E5C3]/20 bg-[#00E5C3]/10 px-4 py-1.5 text-xs font-medium text-[#00E5C3]">
-                            <Zap className="h-3.5 w-3.5 fill-[#00E5C3]" />
-                            Smart EV Charging Tracker
-                        </div>
+                        Start for Free
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                </motion.div>
 
-                        <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
-                            Track Your EV Charging.{" "}
-                            <span className="bg-gradient-to-r from-[#00E5C3] to-[#0066FF] bg-clip-text text-transparent">
-                                Smarter.
-                            </span>
-                        </h1>
-
-                        <p className="mt-6 max-w-lg text-lg leading-relaxed text-zinc-400 sm:text-xl">
-                            Monitor energy, cost, and efficiency in real-time.
-                            Your personal EV charging companion.
-                        </p>
-
-                        <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start">
-                            <Link
-                                href="/register"
-                                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00E5C3] to-[#0066FF] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#00E5C3]/20 transition-all hover:shadow-[#00E5C3]/30 hover:scale-[1.02] active:scale-95"
-                            >
-                                Get Started Free
-                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                            </Link>
-                            <Link
-                                href="/login"
-                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-8 py-3.5 text-sm font-semibold text-zinc-300 transition-all hover:bg-white/[0.06] active:scale-95"
-                            >
-                                Login
-                            </Link>
-                        </div>
-                    </motion.div>
-
-                    {/* Right: Dashboard Preview Mockup */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                        className="relative hidden lg:block"
-                    >
-                        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 shadow-2xl shadow-black/50 backdrop-blur-xl">
-                            {/* Mini dashboard mockup */}
-                            <div className="mb-4 flex items-center gap-3">
-                                <div className="h-3 w-3 rounded-full bg-red-500/60" />
-                                <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
-                                <div className="h-3 w-3 rounded-full bg-green-500/60" />
-                                <span className="ml-2 text-xs text-zinc-600">VoltTrack Dashboard</span>
+                {/* Dashboard Previews or Stat Cards Array */}
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.5 }}
+                    className="mt-20 w-full grid grid-cols-1 md:grid-cols-3 gap-6"
+                >
+                    {[
+                        { title: "Total Charges", val: "142.5 kWh", icon: BatteryCharging, color: "var(--volt-orange)", bg: "rgba(255,107,53,0.1)" },
+                        { title: "Efficiency", val: "94%", icon: Zap, color: "var(--volt-teal)", bg: "rgba(6,214,160,0.1)" },
+                        { title: "Cost Saved", val: "Rp 320k", icon: ChartBar, color: "var(--volt-blue)", bg: "rgba(17,138,178,0.1)" }
+                    ].map((stat, i) => (
+                        <div key={i} className="flex flex-col items-center p-6 bg-white border border-[rgba(26,26,46,0.06)] rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full mb-4" style={{ background: stat.bg, color: stat.color }}>
+                                <stat.icon className="h-6 w-6" />
                             </div>
-
-                            {/* Stats Row */}
-                            <div className="grid grid-cols-3 gap-3">
-                                {[
-                                    { icon: Zap, label: "This Week", value: "134 kWh", color: "text-[#00E5C3]" },
-                                    { icon: DollarSign, label: "Cost", value: "Rp 779K", color: "text-[#F5A623]" },
-                                    { icon: TrendingUp, label: "Trend", value: "+12.5%", color: "text-blue-400" },
-                                ].map((stat) => (
-                                    <div key={stat.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                                        <stat.icon className={`mb-1.5 h-4 w-4 ${stat.color} ${stat.label === 'This Week' ? 'fill-[#00E5C3]' : ''}`} />
-                                        <p className="text-[10px] text-zinc-500">{stat.label}</p>
-                                        <p className="text-sm font-bold text-white">{stat.value}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Fake Chart Area */}
-                            <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                                <p className="mb-3 text-xs font-medium text-zinc-500">WEEKLY TREND</p>
-                                <div className="flex items-end gap-2 h-24">
-                                    {[40, 55, 35, 70, 50, 85, 65].map((h, i) => (
-                                        <motion.div
-                                            key={i}
-                                            initial={{ height: 0 }}
-                                            animate={{ height: `${h}%` }}
-                                            transition={{ duration: 0.6, delay: 0.4 + i * 0.08 }}
-                                            className="flex-1 rounded-t-md bg-gradient-to-t from-[#00E5C3]/20 to-[#00E5C3]/50"
-                                        />
-                                    ))}
-                                </div>
-                            </div>
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-1" style={{ color: "var(--ink-muted)" }}>{stat.title}</h3>
+                            <p className="text-2xl font-extrabold" style={{ color: "var(--ink)", fontFamily: "var(--font-jakarta)" }}>{stat.val}</p>
                         </div>
-
-                        {/* Glow effect behind card */}
-                        <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-r from-[#00E5C3]/10 to-[#0066FF]/10 blur-2xl" />
-                    </motion.div>
-                </div>
+                    ))}
+                </motion.div>
             </div>
         </section>
     );

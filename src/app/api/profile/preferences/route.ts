@@ -6,12 +6,12 @@ import { handleApiError, apiResponse } from "@/lib/errors";
 const preferencesSchema = z.object({
     defaultLocation: z.string().optional(),
     costPerKwh: z.number().nonnegative("Cost must be 0 or greater").optional(),
-    currency: z.enum(["IDR", "USD"]).optional(),
+    currency: z.string().min(2).max(5).optional(),
     rememberInput: z.boolean().optional(),
     autoFillLocation: z.boolean().optional(),
     smartInsights: z.boolean().optional(),
     favoriteLocations: z.array(z.string()).optional(),
-}).strict();
+});
 
 export async function PATCH(req: Request) {
     try {

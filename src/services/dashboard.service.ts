@@ -41,23 +41,35 @@ function formatTimeAgo(date: Date): string {
     return `${diffDays}d ago`;
 }
 
+function getMonthStart(offset: number = 0): Date {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    start.setHours(0, 0, 0, 0);
+    return start;
+}
+
+function getMonthEnd(offset: number = 0): Date {
+    const start = getMonthStart(offset + 1);
+    return start;
+}
+
 // ─── Hero metrics (3 parallel aggregates) ────────────────
 async function getHeroData(userId: string) {
-    const thisWeekStart = getWeekStart(0);
-    const thisWeekEnd = getWeekEnd(0);
-    const lastWeekStart = getWeekStart(-1);
-    const lastWeekEnd = getWeekEnd(-1);
+    const thisMonthStart = getMonthStart(0);
+    const thisMonthEnd = getMonthEnd(0);
+    const lastMonthStart = getMonthStart(-1);
+    const lastMonthEnd = getMonthEnd(-1);
 
-    const [thisWeek, lastWeek, allTime] = await Promise.all([
+    const [thisMonth, lastMonth, allTime] = await Promise.all([
         prisma.chargingSession.aggregate({
             _sum: { energyKwh: true, cost: true },
             _count: { id: true },
-            where: { userId, sessionDate: { gte: thisWeekStart, lt: thisWeekEnd } },
+            where: { userId, sessionDate: { gte: thisMonthStart, lt: thisMonthEnd } },
         }),
         prisma.chargingSession.aggregate({
             _sum: { energyKwh: true, cost: true },
             _count: { id: true },
-            where: { userId, sessionDate: { gte: lastWeekStart, lt: lastWeekEnd } },
+            where: { userId, sessionDate: { gte: lastMonthStart, lt: lastMonthEnd } },
         }),
         prisma.chargingSession.aggregate({
             _sum: { energyKwh: true, cost: true },
@@ -67,27 +79,27 @@ async function getHeroData(userId: string) {
         }),
     ]);
 
-    const currentKwh = Math.round((thisWeek._sum.energyKwh ?? 0) * 10) / 10;
-    const lastKwh = Math.round((lastWeek._sum.energyKwh ?? 0) * 10) / 10;
+    const currentKwh = Math.round((thisMonth._sum.energyKwh ?? 0) * 10) / 10;
+    const lastKwh = Math.round((lastMonth._sum.energyKwh ?? 0) * 10) / 10;
     const trendPercentage = getPercentageChange(currentKwh, lastKwh);
 
     let insightText = "";
     if (trendPercentage > 20) {
-        insightText = `That's ${trendPercentage}% higher than last week.`;
+        insightText = `That's ${trendPercentage}% higher than last month.`;
     } else if (trendPercentage < -20) {
-        insightText = `You used ${Math.abs(trendPercentage)}% less energy than last week.`;
+        insightText = `You used ${Math.abs(trendPercentage)}% less energy than last month.`;
     } else {
-        insightText = "Your usage is consistent with last week.";
+        insightText = "Your usage is consistent with last month.";
     }
 
     return {
         kwh: currentKwh,
         trendPercentage,
         insightText,
-        cost: thisWeek._sum.cost ?? 0,
-        sessionsThisWeek: thisWeek._count.id,
-        lastWeekCost: lastWeek._sum.cost ?? 0,
-        lastWeekSessions: lastWeek._count.id,
+        cost: thisMonth._sum.cost ?? 0,
+        sessionsThisMonth: thisMonth._count.id,
+        lastMonthCost: lastMonth._sum.cost ?? 0,
+        lastMonthSessions: lastMonth._count.id,
         totalSessions: allTime._count.id,
         totalKwh: Math.round((allTime._sum.energyKwh ?? 0) * 10) / 10,
         totalCost: Math.round(allTime._sum.cost ?? 0),
@@ -101,11 +113,13 @@ async function getEnergyBreakdown(userId: string) {
         prisma.chargingSession.groupBy({
             by: ["location"],
             _sum: { energyKwh: true, cost: true },
+            _count: { id: true },
             where: { userId },
         }),
         prisma.chargingSession.groupBy({
             by: ["chargerType"],
             _sum: { energyKwh: true },
+            _count: { id: true },
             where: { userId },
         }),
     ]);
@@ -118,8 +132,9 @@ async function getEnergyBreakdown(userId: string) {
             name: r.location,
             kwh: Math.round((r._sum.energyKwh ?? 0) * 10) / 10,
             percent: Math.round(((r._sum.energyKwh ?? 0) / totalEnergy) * 100),
+            count: r._count.id,
         }))
-        .sort((a, b) => b.kwh - a.kwh);
+        .sort((a, b) => b.count - a.count); // sort by frequency, not kWh
 
     const chargerBreakdown = byChargerRaw
         .map((r) => ({
@@ -282,7 +297,7 @@ function getSmartInsights(
         stories.push({
             id: "top-loc",
             icon: "zap",
-            text: `${top.name} is your most used location (${top.percent}% of energy).`,
+            text: `${top.name} is your most visited charging spot (${top.count} session${top.count > 1 ? "s" : ""}).`,
             type: "neutral",
         });
     }

@@ -15,9 +15,9 @@ const stats = [
         icon: Zap,
         suffix: " kWh",
         prefix: "",
-        accent: "#00E5C3",
-        accentBg: "rgba(0,229,195,0.08)",
-        accentGlow: "rgba(0,229,195,0.15)",
+        accent: "#FF6B35",
+        accentBg: "rgba(255,107,53,0.1)",
+        accentBorder: "#FF6B35",
     },
     {
         key: "totalCost",
@@ -25,9 +25,9 @@ const stats = [
         icon: DollarSign,
         suffix: "",
         prefix: "Rp ",
-        accent: "#F5A623",
-        accentBg: "rgba(245,166,35,0.08)",
-        accentGlow: "rgba(245,166,35,0.15)",
+        accent: "#06D6A0",
+        accentBg: "rgba(6,214,160,0.1)",
+        accentBorder: "#06D6A0",
     },
     {
         key: "totalSessions",
@@ -35,9 +35,9 @@ const stats = [
         icon: Hash,
         suffix: "",
         prefix: "",
-        accent: "#a78bfa",
-        accentBg: "rgba(167,139,250,0.08)",
-        accentGlow: "rgba(167,139,250,0.15)",
+        accent: "#118AB2",
+        accentBg: "rgba(17,138,178,0.1)",
+        accentBorder: "#118AB2",
     },
     {
         key: "avgEnergy",
@@ -45,9 +45,9 @@ const stats = [
         icon: Activity,
         suffix: " kWh",
         prefix: "",
-        accent: "#60a5fa",
-        accentBg: "rgba(96,165,250,0.08)",
-        accentGlow: "rgba(96,165,250,0.15)",
+        accent: "#7B5EA7",
+        accentBg: "rgba(123,94,167,0.1)",
+        accentBorder: "#7B5EA7",
     },
 ] as const;
 
@@ -63,7 +63,7 @@ export function HistorySummary({ summary }: HistorySummaryProps) {
         <div className="space-y-3">
             <p
                 className="text-[10px] font-bold uppercase tracking-[0.2em]"
-                style={{ color: "rgba(113,113,122,1)" }}
+                style={{ color: "var(--ink-muted)" }}
             >
                 Your Journey
             </p>
@@ -76,19 +76,11 @@ export function HistorySummary({ summary }: HistorySummaryProps) {
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.07, type: "spring", damping: 20 }}
-                            className="relative overflow-hidden rounded-2xl p-4"
+                            className="volt-card relative min-w-0 overflow-hidden rounded-2xl p-3 sm:p-4 transition-all duration-200"
                             style={{
-                                background: "rgba(18,18,22,0.8)",
-                                backdropFilter: "blur(16px)",
-                                border: "1px solid rgba(255,255,255,0.06)",
-                                boxShadow: `0 0 0 1px rgba(255,255,255,0.03) inset, 0 4px 24px rgba(0,0,0,0.3)`,
+                                borderTop: `3px solid ${stat.accentBorder}`,
                             }}
                         >
-                            {/* Bottom glow edge */}
-                            <div
-                                className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 rounded-b-2xl"
-                                style={{ background: `linear-gradient(90deg, transparent, ${stat.accent}, transparent)`, opacity: 0.6 }}
-                            />
                             {/* Icon */}
                             <div
                                 className="mb-3 inline-flex items-center justify-center rounded-xl p-2"
@@ -96,12 +88,23 @@ export function HistorySummary({ summary }: HistorySummaryProps) {
                             >
                                 <Icon className="h-4 w-4" style={{ color: stat.accent }} />
                             </div>
+
                             {/* Number */}
-                            <p className="truncate text-2xl font-bold text-white leading-none">
+                            <p
+                                className="w-full break-words font-extrabold leading-tight text-lg sm:text-xl"
+                                style={{
+                                    color: "var(--ink)",
+                                    fontFamily: "var(--font-mono)",
+                                }}
+                            >
                                 {stat.prefix}{values[stat.key]}{stat.suffix}
                             </p>
+
                             {/* Label */}
-                            <p className="mt-1.5 text-[11px] font-medium" style={{ color: "rgba(113,113,122,1)" }}>
+                            <p
+                                className="mt-1 text-[11px] font-medium"
+                                style={{ color: "var(--ink-muted)" }}
+                            >
                                 {stat.label}
                             </p>
                         </motion.div>

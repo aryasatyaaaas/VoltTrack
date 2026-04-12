@@ -3,78 +3,66 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-    LayoutDashboard,
-    BatteryCharging,
-    History,
-    User,
-} from "lucide-react";
-import { motion } from "framer-motion";
 
 const navItems = [
-    { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-    { href: "/charging", label: "Charging", icon: BatteryCharging },
-    { href: "/history", label: "History", icon: History },
-    { href: "/profile", label: "Profile", icon: User },
+    {
+        href: "/dashboard",
+        label: "Beranda",
+        icon: (
+            <svg viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h3a1 1 0 001-1v-3h2v3a1 1 0 001 1h3a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+        ),
+    },
+    {
+        href: "/charging",
+        label: "Charging",
+        icon: (
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 2L5.5 11H10L8.5 18 16 9h-5l2-7z" />
+            </svg>
+        ),
+    },
+    {
+        href: "/history",
+        label: "Riwayat",
+        icon: (
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+                <circle cx="10" cy="10" r="7" />
+                <path d="M10 6.5v3.5l2.5 2.5" />
+            </svg>
+        ),
+    },
+    {
+        href: "/analytics",
+        label: "Analitik",
+        icon: (
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3,14 7,10 10,13 14,8 17,11" />
+            </svg>
+        ),
+    },
 ];
 
 export function MobileBottomNav() {
     const pathname = usePathname();
 
     return (
-        <div className="pointer-events-none fixed bottom-4 left-0 right-0 z-50 flex justify-center md:hidden">
-            <nav
-                className="pointer-events-auto flex items-center gap-0.5 rounded-2xl p-1.5 shadow-2xl backdrop-blur-xl"
-                style={{
-                    background: "rgba(15,15,18,0.92)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
-                }}
-            >
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    const Icon = item.icon;
-
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                "group relative flex flex-col items-center justify-center gap-1 overflow-hidden rounded-xl px-5 py-2 transition-all active:scale-95",
-                                isActive ? "text-[#00E5C3]" : "text-zinc-600 hover:text-zinc-400"
-                            )}
-                        >
-                            {isActive && (
-                                <motion.div
-                                    layoutId="bottom-nav-active"
-                                    className="absolute inset-0 -z-10 rounded-xl"
-                                    style={{ background: "rgba(0,229,195,0.1)" }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                />
-                            )}
-
-                            <Icon
-                                className={cn(
-                                    "h-5 w-5 transition-transform duration-200",
-                                    isActive ? "scale-110" : "scale-100 group-hover:scale-105"
-                                )}
-                            />
-                            <span className="text-[10px] font-semibold tracking-wide">{item.label}</span>
-
-                            {isActive && (
-                                <motion.div
-                                    layoutId="bottom-nav-glow"
-                                    className="absolute bottom-1 h-0.5 w-4 rounded-full"
-                                    style={{
-                                        background: "#00E5C3",
-                                        boxShadow: "0 0 8px 2px rgba(0,229,195,0.5)",
-                                    }}
-                                />
-                            )}
-                        </Link>
-                    );
-                })}
-            </nav>
-        </div>
+        <nav className="bottom-nav">
+            {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn("bottom-nav-item", isActive && "active")}
+                    >
+                        {item.icon}
+                        {item.label}
+                    </Link>
+                );
+            })}
+        </nav>
     );
 }
+

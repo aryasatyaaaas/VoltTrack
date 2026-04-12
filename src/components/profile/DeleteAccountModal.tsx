@@ -50,30 +50,30 @@ export function DeleteAccountModal({ isOpen, onClose, onConfirm }: DeleteAccount
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative w-full max-w-md rounded-2xl border border-red-500/20 bg-black p-6 shadow-2xl">
+            <div className="relative w-full max-w-md rounded-2xl border border-red-200 bg-white p-6 shadow-2xl">
                 <button
                     onClick={onClose}
-                    className="absolute right-4 top-4 rounded-lg p-1 text-zinc-500 transition hover:bg-white/5 hover:text-zinc-300"
+                    className="absolute right-4 top-4 rounded-lg p-1 text-zinc-400 transition hover:bg-gray-100 hover:text-zinc-600"
                 >
                     <X className="h-4 w-4" />
                 </button>
 
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
-                    <AlertTriangle className="h-6 w-6 text-red-400" />
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                    <AlertTriangle className="h-6 w-6 text-red-600" />
                 </div>
 
-                <h3 className="text-lg font-bold text-white">Delete Account</h3>
-                <p className="mt-2 text-sm text-zinc-400">
-                    This action is <strong className="text-red-400">permanent</strong> and cannot be undone.
+                <h3 className="text-lg font-bold text-zinc-900">Delete Account</h3>
+                <p className="mt-2 text-sm text-zinc-600">
+                    This action is <strong className="text-red-600">permanent</strong> and cannot be undone.
                     All your charging sessions, preferences, and account data will be deleted.
                 </p>
 
                 <div className="mt-6 space-y-4">
                     <div>
-                        <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+                        <label className="mb-1.5 block text-xs font-bold text-zinc-700">
                             Confirm with your password
                         </label>
                         <input
@@ -81,12 +81,12 @@ export function DeleteAccountModal({ isOpen, onClose, onConfirm }: DeleteAccount
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Enter your password"
-                            className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-red-500/50 focus:bg-white/[0.05]"
+                            className="w-full rounded-xl border border-[var(--border)] bg-gray-50 px-4 py-2.5 text-sm text-[var(--ink)] placeholder-zinc-400 outline-none transition-colors focus:border-red-400 focus:bg-white"
                         />
                     </div>
 
                     {error && (
-                        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                        <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
                             <AlertTriangle className="h-4 w-4 shrink-0" />
                             {error}
                         </div>
@@ -96,14 +96,14 @@ export function DeleteAccountModal({ isOpen, onClose, onConfirm }: DeleteAccount
                 <div className="mt-6 flex gap-3">
                     <button
                         onClick={onClose}
-                        className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:bg-white/10"
+                        className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-zinc-700 transition hover:bg-gray-50 shadow-sm"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={isDeleting}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-500/20 px-4 py-2.5 text-sm font-semibold text-red-400 transition hover:bg-red-500/30 disabled:opacity-50"
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-50 shadow-sm"
                     >
                         {isDeleting ? (
                             <><Loader2 className="h-4 w-4 animate-spin" /> Deleting...</>

@@ -5,7 +5,6 @@ import { HistorySummary } from "@/components/history/HistorySummary";
 import { HistoryFilters } from "@/components/history/HistoryFilters";
 import { HistorySessionCard } from "@/components/history/HistorySessionCard";
 import { SessionDetailModal } from "@/components/history/SessionDetailModal";
-import { HistoryInsights } from "@/components/history/HistoryInsights";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Plug, Plus, Zap } from "lucide-react";
 import Link from "next/link";
@@ -133,7 +132,7 @@ export default function HistoryPage() {
     if (loading) {
         return (
             <div className="flex flex-1 items-center justify-center py-24">
-                <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#00E5C3" }} />
+                <Loader2 className="h-8 w-8 animate-spin" style={{ color: "var(--volt-orange)" }} />
             </div>
         );
     }
@@ -142,17 +141,6 @@ export default function HistoryPage() {
 
     return (
         <div className="space-y-7">
-            {/* Insight pills */}
-            {insights.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <HistoryInsights insights={insights} />
-                </motion.div>
-            )}
-
             {/* Bento stat grid — "Your Journey" */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -176,27 +164,27 @@ export default function HistoryPage() {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center justify-center py-20 text-center"
+                    className="flex flex-col items-center justify-center py-20 text-center rounded-3xl border bg-white"
+                    style={{ borderColor: "var(--border)", boxShadow: "0 2px 12px rgba(0,0,0,0.02)" }}
                 >
                     <div
                         className="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl"
                         style={{
-                            background: "rgba(0,229,195,0.06)",
-                            boxShadow: "0 0 40px rgba(0,229,195,0.12)",
+                            background: "rgba(255,107,53,0.1)",
                         }}
                     >
-                        <Plug className="h-10 w-10" style={{ color: "rgba(0,229,195,0.5)" }} />
+                        <Plug className="h-10 w-10" style={{ color: "var(--volt-orange)" }} />
                     </div>
-                    <h3 className="text-lg font-semibold text-white">No sessions yet</h3>
-                    <p className="mt-1 text-sm" style={{ color: "rgba(113,113,122,1)" }}>
+                    <h3 className="text-lg font-bold" style={{ color: "var(--ink)" }}>No sessions yet</h3>
+                    <p className="mt-1 text-sm" style={{ color: "var(--ink-muted)" }}>
                         Start charging — your history will appear here.
                     </p>
                     <Link
                         href="/charging"
                         className="mt-6 flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold text-white transition hover:scale-[1.03]"
                         style={{
-                            background: "linear-gradient(135deg, #00E5C3 0%, #0066FF 100%)",
-                            boxShadow: "0 8px 24px rgba(0,229,195,0.25)",
+                            background: "linear-gradient(135deg, #FF6B35 0%, #FFD93D 100%)",
+                            boxShadow: "0 8px 24px rgba(255,107,53,0.25)",
                         }}
                     >
                         <Zap className="h-4 w-4" /> Log First Session
@@ -213,14 +201,14 @@ export default function HistoryPage() {
                     <div className="flex items-center gap-4 pb-2">
                         <span
                             className="text-[10px] font-bold uppercase tracking-[0.2em]"
-                            style={{ color: "rgba(63,63,70,1)" }}
+                            style={{ color: "var(--ink-muted)" }}
                         >
                             All Sessions
                         </span>
-                        <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.05)" }} />
+                        <div className="h-px flex-1" style={{ background: "var(--border)" }} />
                         <span
                             className="text-[10px] font-medium"
-                            style={{ color: "rgba(63,63,70,1)" }}
+                            style={{ color: "var(--ink-muted)" }}
                         >
                             {sessions.length} total
                         </span>
@@ -240,11 +228,11 @@ export default function HistoryPage() {
                                 <div className="flex items-center gap-3 pt-3">
                                     <span
                                         className="text-[10px] font-bold uppercase tracking-[0.15em]"
-                                        style={{ color: "rgba(82,82,91,1)" }}
+                                        style={{ color: "var(--ink-muted)" }}
                                     >
                                         {group.label}
                                     </span>
-                                    <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.04)" }} />
+                                    <div className="h-px flex-1" style={{ background: "var(--border)" }} />
                                 </div>
 
                                 {/* Session cards for this date */}
@@ -265,10 +253,12 @@ export default function HistoryPage() {
                             <button
                                 onClick={handleLoadMore}
                                 disabled={loadingMore}
-                                className="flex items-center gap-2 rounded-2xl px-8 py-3 text-sm font-semibold text-zinc-300 transition hover:text-white disabled:opacity-50"
+                                className="flex items-center gap-2 rounded-2xl px-8 py-3 text-sm font-bold transition disabled:opacity-50"
                                 style={{
-                                    background: "rgba(255,255,255,0.04)",
-                                    border: "1px solid rgba(255,255,255,0.08)",
+                                    background: "white",
+                                    border: "1px solid var(--border)",
+                                    color: "var(--ink)",
+                                    boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
                                 }}
                             >
                                 {loadingMore ? (

@@ -1,17 +1,19 @@
 "use client";
 
-import { Header } from "@/components/layout/Header";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex min-h-screen flex-col" style={{ background: "#0F0F12" }}>
-            <Header />
-            <main className="flex-1 overflow-x-hidden pb-24 md:pb-12">
-                <div className="mx-auto max-w-2xl px-4 py-6 md:px-0">
+        <div className="app">
+            <Sidebar />
+            
+            <main className="main">
+                <div className="mx-auto w-full max-w-5xl flex flex-col gap-[22px]">
                     {children}
                 </div>
             </main>
+
             <MobileBottomNav />
         </div>
     );

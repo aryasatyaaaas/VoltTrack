@@ -161,13 +161,13 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
     });
 
     return (
-        <Card className="relative overflow-hidden p-0">
+        <Card className="relative overflow-hidden p-0 border-[var(--border)] bg-white shadow-sm">
             {/* Toast notification */}
             {toast && (
                 <div
-                    className={`absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur-md transition-all ${toast.type === "error"
-                            ? "border border-red-500/30 bg-red-500/15 text-red-300"
-                            : "border border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
+                    className={`absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold shadow-lg backdrop-blur-md transition-all ${toast.type === "error"
+                            ? "border border-red-200 bg-red-50 text-red-700"
+                            : "border border-emerald-200 bg-emerald-50 text-emerald-700"
                         }`}
                 >
                     {toast.type === "error" && <AlertCircle className="h-4 w-4 shrink-0" />}
@@ -179,16 +179,20 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
             )}
 
             {/* Gradient header strip */}
-            <div className="h-24 bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-transparent" />
+            <div className="h-24" style={{ background: "linear-gradient(90deg, rgba(255,107,53,0.1), var(--bg-secondary), transparent)" }} />
 
             <div className="px-6 pb-6">
                 {/* Avatar with upload */}
                 <div className="-mt-12 mb-4">
-                    <div className="group relative">
+                    <div className="group relative w-fit">
                         <button
                             onClick={handleAvatarClick}
                             disabled={isUploading}
-                            className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-2xl font-bold text-white shadow-lg shadow-cyan-500/20 ring-4 ring-black transition-all hover:ring-cyan-500/30 disabled:opacity-70"
+                            className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full font-bold text-3xl text-white shadow-lg ring-4 ring-white transition-all hover:scale-105 disabled:opacity-70 disabled:hover:scale-100"
+                            style={{
+                                background: "linear-gradient(135deg, #FF6B35 0%, #FFD93D 100%)",
+                                boxShadow: "0 4px 16px rgba(255,107,53,0.3)"
+                            }}
                         >
                             {avatarUrl ? (
                                 <img
@@ -201,11 +205,11 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
                             )}
 
                             {/* Hover overlay */}
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                                 {isUploading ? (
-                                    <Loader2 className="h-6 w-6 animate-spin text-white" />
+                                    <Loader2 className="h-8 w-8 animate-spin text-white" />
                                 ) : (
-                                    <Camera className="h-6 w-6 text-white" />
+                                    <Camera className="h-8 w-8 text-white" />
                                 )}
                             </div>
                         </button>
@@ -226,43 +230,49 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
                             <input
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-lg font-semibold text-white outline-none focus:border-cyan-500/50"
+                                className="rounded-xl border border-[var(--border)] bg-gray-50 px-4 py-2 text-lg font-bold outline-none transition-all"
+                                style={{ color: "var(--ink)" }}
+                                onFocus={e => e.currentTarget.style.border = "1px solid var(--volt-orange)"}
+                                onBlur={e => e.currentTarget.style.border = "1px solid var(--border)"}
                                 autoFocus
                             />
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="rounded-lg bg-cyan-500/20 p-1.5 text-cyan-400 transition hover:bg-cyan-500/30 disabled:opacity-50"
+                                className="rounded-xl p-2.5 transition disabled:opacity-50 hover:bg-opacity-80"
+                                style={{ background: "rgba(255,107,53,0.1)", color: "var(--volt-orange)" }}
                             >
                                 {isSaving ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <Loader2 className="h-5 w-5 animate-spin" />
                                 ) : (
-                                    <Check className="h-4 w-4" />
+                                    <Check className="h-5 w-5" />
                                 )}
                             </button>
                             <button
                                 onClick={handleCancel}
-                                className="rounded-lg bg-white/5 p-1.5 text-zinc-400 transition hover:bg-white/10"
+                                className="rounded-xl bg-gray-100 p-2.5 transition hover:bg-gray-200"
+                                style={{ color: "var(--ink-muted)" }}
                             >
-                                <X className="h-4 w-4" />
+                                <X className="h-5 w-5" />
                             </button>
                         </div>
                     ) : (
                         <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold text-white">{profile.name}</h2>
+                            <h2 className="text-2xl font-extrabold" style={{ color: "var(--ink)" }}>{profile.name}</h2>
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="rounded-lg bg-white/5 p-1.5 text-zinc-500 transition hover:bg-white/10 hover:text-zinc-300"
+                                className="rounded-xl bg-gray-100 p-2 transition hover:bg-gray-200"
+                                style={{ color: "var(--ink-muted)" }}
                             >
-                                <Pencil className="h-3.5 w-3.5" />
+                                <Pencil className="h-4 w-4" />
                             </button>
                         </div>
                     )}
 
-                    <p className="text-sm text-zinc-500">{profile.email}</p>
+                    <p className="text-sm" style={{ color: "var(--ink-muted)" }}>{profile.email}</p>
 
                     <div className="mt-3 flex items-center gap-3">
-                        <span className="text-xs text-zinc-600">
+                        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ink-4)" }}>
                             Member since {memberSince}
                         </span>
                     </div>

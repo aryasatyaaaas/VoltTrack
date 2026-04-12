@@ -1,21 +1,39 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Zap, LayoutDashboard, BatteryCharging, History } from "lucide-react";
-
-const navItems = [
-    { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-    { href: "/charging", label: "Charging", icon: BatteryCharging },
-    { href: "/history", label: "History", icon: History },
-];
+import {
+    LayoutDashboard,
+    BatteryCharging,
+    History,
+    BarChart3,
+    User,
+    Zap,
+} from "lucide-react";
 
 interface UserInfo {
     name: string;
     avatarUrl: string | null;
 }
+
+const navGroups = [
+    {
+        label: "Main",
+        items: [
+            { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        ],
+    },
+    {
+        label: "Activity",
+        items: [
+            { href: "/charging", label: "Charging", icon: BatteryCharging },
+            { href: "/history", label: "History", icon: History },
+            { href: "/analytics", label: "Analytics", icon: BarChart3 },
+        ],
+    },
+];
 
 export function Header() {
     const pathname = usePathname();
@@ -33,19 +51,51 @@ export function Header() {
     const displayName = user?.name ?? "User";
     const initial = displayName.charAt(0).toUpperCase();
 
+    const pageTitle = (() => {
+        if (pathname === "/dashboard") return "Dashboard";
+        if (pathname === "/charging") return "Log Charging";
+        if (pathname === "/history") return "History";
+        if (pathname === "/analytics") return "Analytics";
+        if (pathname === "/profile") return "Profile";
+        return "VoltTrack";
+    })();
+
     return (
-        <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 backdrop-blur-md border-b border-white/[0.05] md:px-6">
+        <header
+            className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 md:px-6"
+            style={{
+                background: "var(--bg-card)",
+                borderBottom: "1px solid var(--border)",
+                boxShadow: "0 1px 0 var(--border)",
+            }}
+        >
             {/* Logo */}
-            <Link href="/dashboard" className="flex items-center gap-2 group shrink-0">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#00E5C3]/15 ring-1 ring-[#00E5C3]/30 transition-all group-hover:bg-[#00E5C3]/25">
-                    <Zap className="h-4 w-4 text-[#00E5C3]" fill="currentColor" />
+            <Link href="/dashboard" className="flex items-center gap-2.5 group shrink-0">
+                <div
+                    className="flex h-8 w-8 items-center justify-center rounded-xl transition-all group-hover:scale-105"
+                    style={{ background: "linear-gradient(135deg, #FF6B35, #FFD93D)" }}
+                >
+                    <Zap className="h-4 w-4 text-white" fill="currentColor" />
                 </div>
-                <span className="hidden text-sm font-bold tracking-tight text-white sm:block">VoltTrack</span>
+                <span
+                    className="hidden text-base font-extrabold tracking-tight sm:block"
+                    style={{ color: "var(--ink)" }}
+                >
+                    VoltTrack
+                </span>
             </Link>
 
-            {/* Center Nav — desktop only (mobile handled by MobileBottomNav) */}
-            <nav className="hidden items-center gap-0.5 rounded-full bg-white/[0.04] p-1 ring-1 ring-white/[0.06] md:flex">
-                {navItems.map((item) => {
+            {/* Page Title — mobile */}
+            <span
+                className="text-sm font-semibold sm:hidden"
+                style={{ color: "var(--ink)" }}
+            >
+                {pageTitle}
+            </span>
+
+            {/* Center Nav — desktop only */}
+            <nav className="hidden items-center gap-0.5 md:flex">
+                {navGroups.flatMap((g) => g.items).map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
                     return (
@@ -53,15 +103,20 @@ export function Header() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200",
+                                "flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
                                 isActive
-                                    ? "bg-[#00E5C3]/15 text-[#00E5C3] shadow-sm"
-                                    : "text-zinc-500 hover:text-zinc-300"
+                                    ? "text-white"
+                                    : "hover:bg-[--bg-secondary]"
                             )}
+                            style={isActive ? {
+                                background: "var(--volt-orange)",
+                                color: "#fff",
+                            } : {
+                                color: "var(--ink-muted)",
+                            }}
                         >
-                            {/* Icon always visible, label hidden on xs */}
                             <Icon className="h-4 w-4 shrink-0" />
-                            <span className="hidden sm:block">{item.label}</span>
+                            <span>{item.label}</span>
                         </Link>
                     );
                 })}
@@ -69,11 +124,20 @@ export function Header() {
 
             {/* Avatar */}
             <Link href="/profile" className="group relative shrink-0">
-                <div className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-[#00E5C3]/20 transition-all group-hover:ring-[#00E5C3]/50 group-hover:shadow-[0_0_12px_rgba(0,229,195,0.25)] md:h-9 md:w-9">
+                <div
+                    className="relative h-8 w-8 overflow-hidden rounded-full transition-all group-hover:scale-105 md:h-9 md:w-9"
+                    style={{
+                        border: "2px solid var(--volt-orange)",
+                        boxShadow: "0 0 0 2px rgba(255,107,53,0.15)",
+                    }}
+                >
                     {user?.avatarUrl ? (
                         <img src={user.avatarUrl} alt={displayName} className="h-full w-full object-cover" />
                     ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#00E5C3] to-teal-600 text-xs font-bold text-black">
+                        <div
+                            className="flex h-full w-full items-center justify-center text-xs font-bold text-white"
+                            style={{ background: "linear-gradient(135deg, #FF6B35, #FFD93D)" }}
+                        >
                             {initial}
                         </div>
                     )}

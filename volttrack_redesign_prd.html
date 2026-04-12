@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --volt-yellow: #FFD93D;
+    --volt-orange: #FF6B35;
+    --volt-green: #06D6A0;
+    --volt-blue: #118AB2;
+    --volt-purple: #7B5EA7;
+    --ink: #1A1A2E;
+    --ink-2: #2D2D44;
+    --ink-light: #6B6B8A;
+    --surface: #F8F7FF;
+    --surface-2: #EEEDF8;
+    --surface-3: #E4E3F4;
+    --white: #FFFFFF;
+    --border: rgba(26,26,46,0.1);
+    --border-strong: rgba(26,26,46,0.18);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 0;
+  }
+
+  /* ── HEADER ── */
+  .prd-header {
+    background: var(--ink);
+    padding: 40px 48px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .prd-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(255,217,61,0.25) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .prd-header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 200px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(6,214,160,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .doc-type {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--volt-yellow);
+    margin-bottom: 12px;
+  }
+  .prd-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+  .prd-title span {
+    color: var(--volt-yellow);
+  }
+  .prd-subtitle {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 28px;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .meta-pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .meta-pill .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--volt-green);
+  }
+
+  /* ── BODY ── */
+  .prd-body {
+    padding: 0 48px 48px;
+  }
+
+  /* ── TOC ── */
+  .toc-section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    margin: 32px 0;
+  }
+  .toc-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 16px;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 32px;
+  }
+  .toc-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 13px;
+    color: var(--ink-2);
+    border-bottom: 1px solid var(--border);
+  }
+  .toc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--volt-orange);
+    font-weight: 500;
+    min-width: 20px;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    margin-top: 40px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--surface-3);
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--white);
+    background: var(--volt-orange);
+    padding: 4px 8px;
+    border-radius: 6px;
+    min-width: 32px;
+    text-align: center;
+  }
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 12px;
+  }
+  .card-accent {
+    border-left: 3px solid var(--volt-orange);
+  }
+  .card-green {
+    border-left: 3px solid var(--volt-green);
+  }
+  .card-yellow {
+    border-left: 3px solid var(--volt-yellow);
+    background: rgba(255,217,61,0.04);
+  }
+  .card-blue {
+    border-left: 3px solid var(--volt-blue);
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-badge {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: rgba(255,107,53,0.12);
+    color: var(--volt-orange);
+  }
+  .card-badge.green {
+    background: rgba(6,214,160,0.12);
+    color: #05A87E;
+  }
+  .card-badge.blue {
+    background: rgba(17,138,178,0.12);
+    color: var(--volt-blue);
+  }
+  .card-badge.yellow {
+    background: rgba(255,217,61,0.18);
+    color: #B8900A;
+  }
+  .card-badge.purple {
+    background: rgba(123,94,167,0.12);
+    color: var(--volt-purple);
+  }
+
+  .card p {
+    font-size: 13px;
+    color: var(--ink-light);
+    line-height: 1.65;
+  }
+
+  /* ── GRID ── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ── DESIGN TOKENS ── */
+  .token-group {
+    margin-bottom: 20px;
+  }
+  .token-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-light);
+    margin-bottom: 10px;
+  }
+  .color-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .color-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip-swatch {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .chip-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-light);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .font-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .font-demo {
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .font-name {
+    font-size: 12px;
+    color: var(--ink-light);
+    font-weight: 500;
+  }
+  .font-preview {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .font-preview.display { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 22px; font-weight: 800; }
+  .font-preview.mono { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 400; }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .compare-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-light);
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--surface-3);
+  }
+  .compare-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--ink-2);
+  }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table .col-before { color: var(--ink-light); text-decoration: line-through; opacity: 0.6; }
+  .compare-table .col-after { color: var(--ink); font-weight: 500; }
+  .compare-table .col-reason { color: var(--ink-light); font-size: 12px; }
+  .compare-table .aspect { font-weight: 600; color: var(--ink); }
+
+  /* ── PAGE CARDS ── */
+  .page-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .page-card-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .page-card-route {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--volt-orange);
+  }
+  .page-card-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .page-card-body {
+    padding: 16px 20px;
+  }
+  .change-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .change-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    min-width: 52px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .tag-new { background: rgba(6,214,160,0.12); color: #05A87E; }
+  .tag-update { background: rgba(17,138,178,0.12); color: var(--volt-blue); }
+  .tag-rework { background: rgba(255,107,53,0.12); color: var(--volt-orange); }
+  .tag-keep { background: rgba(107,107,138,0.1); color: var(--ink-light); }
+  .change-text {
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+
+  /* ── PRIORITY MATRIX ── */
+  .priority-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .priority-row:last-child { border-bottom: none; }
+  .prio-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    min-width: 52px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .prio-p1 { background: rgba(255,107,53,0.15); color: var(--volt-orange); }
+  .prio-p2 { background: rgba(255,217,61,0.2); color: #A07A00; }
+  .prio-p3 { background: rgba(6,214,160,0.12); color: #05A87E; }
+  .prio-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .prio-desc {
+    font-size: 12px;
+    color: var(--ink-light);
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: rgba(255,217,61,0.08);
+    border: 1px solid rgba(255,217,61,0.3);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin: 16px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .callout-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .callout-text {
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .callout-text strong { color: var(--ink); }
+
+  /* ── PRINCIPLE CARDS ── */
+  .principle-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .principle-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .principle-icon.orange { background: rgba(255,107,53,0.1); }
+  .principle-icon.green { background: rgba(6,214,160,0.1); }
+  .principle-icon.yellow { background: rgba(255,217,61,0.12); }
+  .principle-icon.blue { background: rgba(17,138,178,0.1); }
+  .principle-icon.purple { background: rgba(123,94,167,0.1); }
+  .principle-icon.teal { background: rgba(6,214,160,0.08); }
+  .principle-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .principle-desc { font-size: 12px; color: var(--ink-light); line-height: 1.55; }
+
+  /* ── DIVIDER ── */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(to right, var(--volt-orange), var(--volt-yellow), transparent);
+    margin: 36px 0;
+    opacity: 0.4;
+  }
+
+  /* ── FOOTER ── */
+  .prd-footer {
+    background: var(--ink);
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 48px;
+  }
+  .footer-brand {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--white);
+  }
+  .footer-brand span { color: var(--volt-yellow); }
+  .footer-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── MILESTONE ── */
+  .milestone-track {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .milestone-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .milestone-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 20px;
+    flex-shrink: 0;
+  }
+  .milestone-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--volt-orange);
+    background: var(--white);
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .milestone-dot.filled { background: var(--volt-orange); }
+  .milestone-line {
+    width: 2px;
+    flex: 1;
+    min-height: 24px;
+    background: var(--surface-3);
+    margin: 4px 0;
+  }
+  .milestone-content {
+    padding-bottom: 20px;
+    flex: 1;
+  }
+  .milestone-phase {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--volt-orange);
+    margin-bottom: 4px;
+  }
+  .milestone-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .milestone-desc { font-size: 12px; color: var(--ink-light); line-height: 1.55; }
+  .milestone-duration {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-light);
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 6px;
+  }
+
+</style>
+
+<!-- HEADER -->
+<div class="prd-header">
+  <div class="doc-type">Product Requirements Document</div>
+  <div class="prd-title">VoltTrack <span>Web Redesign</span></div>
+  <div class="prd-subtitle">From dark & moody → bright, energetic & modern</div>
+  <div class="meta-row">
+    <div class="meta-pill"><span class="dot"></span> Status: Draft v1.0</div>
+    <div class="meta-pill">Scope: Website (Desktop + Responsive)</div>
+    <div class="meta-pill">Stack: Next.js 16 + Tailwind CSS v4</div>
+    <div class="meta-pill">April 2026</div>
+  </div>
+</div>
+
+<div class="prd-body">
+
+  <!-- TOC -->
+  <div class="toc-section">
+    <div class="toc-title">Daftar Isi</div>
+    <div class="toc-grid">
+      <div class="toc-item"><span class="toc-num">01</span> Latar Belakang & Tujuan</div>
+      <div class="toc-item"><span class="toc-num">05</span> Design System Baru</div>
+      <div class="toc-item"><span class="toc-num">02</span> Masalah Desain Saat Ini</div>
+      <div class="toc-item"><span class="toc-num">06</span> Perubahan Per Halaman</div>
+      <div class="toc-item"><span class="toc-num">03</span> Target & Prinsip Desain</div>
+      <div class="toc-item"><span class="toc-num">07</span> Prioritas & Roadmap</div>
+      <div class="toc-item"><span class="toc-num">04</span> Before vs After Comparison</div>
+      <div class="toc-item"><span class="toc-num">08</span> Success Metrics</div>
+    </div>
+  </div>
+
+  <!-- 01 BACKGROUND -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">Latar Belakang & Tujuan</span>
+    </div>
+    <div class="grid-2">
+      <div class="card card-accent">
+        <div class="card-title">Konteks Bisnis <span class="card-badge">Background</span></div>
+        <p>VoltTrack adalah personal EV charging tracker. Saat ini menggunakan dark theme dengan glassmorphism. Redesign bertujuan menggeser positioning visual dari "techy & mysterious" menjadi "energetic & friendly" — lebih relevan untuk pengguna EV yang optimistis terhadap masa depan energi bersih.</p>
+      </div>
+      <div class="card card-green">
+        <div class="card-title">Tujuan Redesign <span class="card-badge green">Goals</span></div>
+        <p>Meningkatkan visual appeal, keterbacaan, dan sense of delight. Mengadopsi light mode sebagai default dengan aksen warna cerah. Memperkuat identitas brand sebagai produk modern & approachable. Melengkapi halaman Analytics yang belum ada.</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 12px;">
+      <div class="callout-icon">💡</div>
+      <div class="callout-text"><strong>Inspirasi desain (fuel.io style):</strong> Clean white/light backgrounds, typography yang bold dan expressive, color splashes yang energetik, data visualization yang jelas, komponen yang terasa "premium tapi bersahabat". Bukan desain yang dingin — melainkan yang memberi semangat setiap kali dibuka.</div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- 02 PROBLEMS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-title">Masalah Desain Saat Ini</span>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">Readability</div>
+        <p>Glassmorphism di dark background menurunkan contrast ratio, terutama untuk teks sekunder. Tidak ideal untuk penggunaan di kondisi terang (outdoor, siang hari).</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Mood & Energi</div>
+        <p>Dark theme memberi kesan "serius & teknikal." Tidak mencerminkan excitement EV ownership. Pengguna yang cek stats charging ingin merasa positif & termotivasi.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Font & Hierarchy</div>
+        <p>Default system font tidak punya karakter kuat. Hierarchy antar heading/body kurang tegas. Tidak ada custom display font yang memperkuat brand voice.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Halaman Kosong</div>
+        <p>Analytics route belum dibangun — nav item yang tidak berfungsi merusak UX. Perlu dibangun sebagai halaman kunci untuk value proposition app.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Color System</div>
+        <p>Teal + amber di atas near-black terasa "neon & dingin." Tidak hangat. Kurang ekspresif. Warna accent tidak cukup beragam untuk differentiate komponen.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Brand Identity</div>
+        <p>Belum ada identitas visual yang kuat dan konsisten. Logo/wordmark belum ditonjolkan. Tidak ada ilustrasi atau motif grafis yang menjadi signature VoltTrack.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- 03 PRINCIPLES -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-title">Target & Prinsip Desain</span>
+    </div>
+
+    <div class="card card-yellow" style="margin-bottom: 16px;">
+      <div class="card-title">Design Direction <span class="card-badge yellow">Keyword</span></div>
+      <p style="font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: 0.01em;">"Energetic Clean" — Bright, bold, modern. Seperti dashboard kendaraan premium tapi terasa warm & welcoming. Energi matahari, bukan energi reaktor nuklir.</p>
+    </div>
+
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="principle-card">
+        <div class="principle-icon orange">⚡</div>
+        <div>
+          <div class="principle-title">Energy-Forward Color</div>
+          <div class="principle-desc">Dominasi warm yellow-to-orange gradient sebagai primary brand color. Cerminkan energi, optimisme, dan masa depan EV yang bright.</div>
+        </div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon green">🌿</div>
+        <div>
+          <div class="principle-title">Clean & Airy Layout</div>
+          <div class="principle-desc">White/off-white background. Banyak whitespace. Tidak sesak. Komponen bernafas. Sidebar yang ringan, bukan berat.</div>
+        </div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon yellow">✏️</div>
+        <div>
+          <div class="principle-title">Bold Typography</div>
+          <div class="principle-desc">Display font ekspresif untuk heading besar (Plus Jakarta Sans atau Syne). Angka statistik besar dan impactful. Hierarchy yang jelas.</div>
+        </div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon blue">📊</div>
+        <div>
+          <div class="principle-title">Data as Hero</div>
+          <div class="principle-desc">Statistik ditampilkan besar, warna, dan engaging. Chart berwarna cerah dengan animasi masuk. Data harus terasa rewarding untuk dilihat.</div>
+        </div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon purple">✨</div>
+        <div>
+          <div class="principle-title">Micro-delight</div>
+          <div class="principle-desc">Hover state yang playful, transisi halus, angka yang counter-up saat pertama load. Setiap interaksi terasa polished.</div>
+        </div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-icon teal">📱</div>
+        <div>
+          <div class="principle-title">Responsive-First</div>
+          <div class="principle-desc">Desktop sidebar tetap, tapi desain dimulai dari prinsip yang bekerja di kedua ukuran. Bottom nav mobile tetap ada, diperbarui stylingnya.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- 04 BEFORE/AFTER -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-title">Before vs After Comparison</span>
+    </div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width: 18%;">Aspek</th>
+            <th style="width: 30%;">Sebelum (Dark)</th>
+            <th style="width: 30%;">Sesudah (Bright)</th>
+            <th style="width: 22%;">Alasan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="aspect">Background</td>
+            <td class="col-before">#0F0F12 near-black</td>
+            <td class="col-after">#FAFAF8 warm off-white</td>
+            <td class="col-reason">Lebih readable, terasa segar & modern</td>
+          </tr>
+          <tr>
+            <td class="aspect">Primary Accent</td>
+            <td class="col-before">#00E5C3 teal neon</td>
+            <td class="col-after">#FF6B35 electric orange</td>
+            <td class="col-reason">Energetik, warm, khas "voltase tinggi"</td>
+          </tr>
+          <tr>
+            <td class="aspect">Secondary Accent</td>
+            <td class="col-before">#F5A623 amber</td>
+            <td class="col-after">#FFD93D golden yellow</td>
+            <td class="col-reason">Komplemen orange, identitas energi</td>
+          </tr>
+          <tr>
+            <td class="aspect">Support Color</td>
+            <td class="col-before">—</td>
+            <td class="col-after">#06D6A0 teal (sebagai tertiary)</td>
+            <td class="col-reason">Teal tetap ada, tapi bukan primary lagi</td>
+          </tr>
+          <tr>
+            <td class="aspect">Card Style</td>
+            <td class="col-before">Glassmorphism blur</td>
+            <td class="col-after">White card + subtle shadow + soft border</td>
+            <td class="col-reason">Performance lebih baik, lebih readable</td>
+          </tr>
+          <tr>
+            <td class="aspect">Font</td>
+            <td class="col-before">System font default</td>
+            <td class="col-after">Plus Jakarta Sans (display) + variable weight</td>
+            <td class="col-reason">Karakter kuat, modern, readable</td>
+          </tr>
+          <tr>
+            <td class="aspect">Sidebar</td>
+            <td class="col-before">Dark sidebar #0F0F12</td>
+            <td class="col-after">White sidebar + orange active state</td>
+            <td class="col-reason">Light theme konsisten, lebih friendly</td>
+          </tr>
+          <tr>
+            <td class="aspect">Chart Colors</td>
+            <td class="col-before">Teal + amber di dark bg</td>
+            <td class="col-after">Orange + yellow + teal palette, vibrant</td>
+            <td class="col-reason">Lebih vivid, terasa engaging di light mode</td>
+          </tr>
+          <tr>
+            <td class="aspect">Landing Hero</td>
+            <td class="col-before">Split layout dark</td>
+            <td class="col-after">Full-width hero, bold headline, gradient splash</td>
+            <td class="col-reason">Kesan pertama lebih impactful</td>
+          </tr>
+          <tr>
+            <td class="aspect">Empty States</td>
+            <td class="col-before">Tidak ada</td>
+            <td class="col-after">Ilustrasi simpel + CTA jelas</td>
+            <td class="col-reason">Onboarding experience lebih baik</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- 05 DESIGN SYSTEM -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">Design System Baru</span>
+    </div>
+
+    <div class="card" style="margin-bottom: 16px;">
+      <div class="token-group">
+        <div class="token-label">Color Palette</div>
+        <div class="color-row">
+          <div class="color-chip">
+            <div class="chip-swatch" style="background: #FF6B35;"></div>
+            <div class="chip-label">Primary<br>#FF6B35<br>Volt Orange</div>
+          </div>
+          <div class="color-chip">
+            <div class="chip-swatch" style="background: #FFD93D;"></div>
+            <div class="chip-label">Secondary<br>#FFD93D<br>Solar Yellow</div>
+          </div>
+          <div class="color-chip">
+            <div class="chip-swatch" style="background: #06D6A0;"></div>
+            <div class="chip-label">Tertiary<br>#06D6A0<br>Charge Teal</div>
+          </div>
+          <div class="color-chip">
+            <div class="chip-swatch" style="background: #118AB2;"></div>
+            <div class="chip-label">Info<br>#118AB2<br>Electric Blue</div>
+          </div>
+          <div class="color-chip">
+            <div class="chip-swatch" style="background: #FAFAF8;"></div>
+            <div class="chip-label">BG Primary<br>#FAFAF8<br>Warm White</div>
+          </div>
+          <div class="color-chip">
+            <div class="chip-swatch" style="background: #F1F0EB;"></div>
+            <div class="chip-label">BG Secondary<br>#F1F0EB<br>Cream</div>
+          </div>
+          <div class="color-chip">
+            <div class="chip-swatch" style="background: #1A1A2E;"></div>
+            <div class="chip-label">Ink<br>#1A1A2E<br>Deep Navy</div>
+          </div>
+          <div class="color-chip">
+            <div class="chip-swatch" style="background: #6B6B8A;"></div>
+            <div class="chip-label">Muted<br>#6B6B8A<br>Slate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="token-group" style="margin-top: 20px;">
+        <div class="token-label">Typography Scale</div>
+        <div class="font-row">
+          <div class="font-demo">
+            <span class="font-name">Display / Heading — Plus Jakarta Sans 800</span>
+            <span class="font-preview display">VoltTrack</span>
+          </div>
+          <div class="font-demo">
+            <span class="font-name">Body — Plus Jakarta Sans 400/500</span>
+            <span class="font-preview" style="font-size: 14px; font-weight: 400;">Total kWh bulan ini: 142.5 kWh</span>
+          </div>
+          <div class="font-demo">
+            <span class="font-name">Data / Code — JetBrains Mono 400</span>
+            <span class="font-preview mono">Rp 285.000 / 2h 34m</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">Spacing System</div>
+        <p>Base unit: 4px. Scale: 4, 8, 12, 16, 24, 32, 48, 64. Komponen internal: 16–24px padding. Card gap: 16px. Section margin: 40–48px.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Border Radius</div>
+        <p>sm: 8px (input, badge). md: 12px (button, tag). lg: 16px (card). xl: 24px (modal, hero card). pill: 100px (chip, toggle).</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Shadow System</div>
+        <p>Card hover: 0 4px 24px rgba(255,107,53,0.08). Default card: 0 1px 4px rgba(0,0,0,0.06). Modal: 0 16px 48px rgba(0,0,0,0.12).</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 16px; background: rgba(255,107,53,0.06); border-color: rgba(255,107,53,0.2);">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-text"><strong>Dark Mode:</strong> Tetap disiapkan sebagai opsi (user bisa toggle di /profile), tapi light mode menjadi <strong>default</strong>. Dark mode menggunakan deep navy (#1A1A2E) sebagai background — bukan pure black — agar tetap sesuai dengan brand yang warm.</div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- 06 PAGE CHANGES -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <span class="section-title">Perubahan Per Halaman</span>
+    </div>
+
+    <!-- Landing Page -->
+    <div class="page-card">
+      <div class="page-card-header">
+        <div>
+          <div class="page-card-route">/</div>
+          <div class="page-card-name">Landing Page</div>
+        </div>
+        <span class="card-badge" style="background: rgba(255,107,53,0.12); color: var(--volt-orange);">Major Rework</span>
+      </div>
+      <div class="page-card-body">
+        <div class="change-row"><span class="change-tag tag-rework">Rework</span><span class="change-text">Hero section: full-width, bukan split-layout. Headline besar bold (48–64px), subheadline, CTA button orange. Background gradient warm (orange-to-yellow blob/mesh).</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Feature showcase section: 3 kolom highlight fitur utama dengan ikon bergaya bold dan warna. Animasi scroll-reveal.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Mini stats preview section: tampilkan sample chart/number untuk menunjukkan "apa yang akan pengguna lihat." Social proof visual.</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">Auth form dipindah ke modal overlay atau halaman terpisah — bukan selalu split di landing.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Footer sederhana dengan link dan tagline brand.</span></div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="page-card">
+      <div class="page-card-header">
+        <div>
+          <div class="page-card-route">/dashboard</div>
+          <div class="page-card-name">Dashboard Utama</div>
+        </div>
+        <span class="card-badge blue">Significant Update</span>
+      </div>
+      <div class="page-card-body">
+        <div class="change-row"><span class="change-tag tag-rework">Rework</span><span class="change-text">PersonalHero: background card menggunakan gradient orange-to-yellow. Angka total kWh ditampilkan besar (40px+) dengan font mono. Trend indicator lebih visual (arrow icon + warna hijau/merah).</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">HighlightCards: white card dengan colored icon container. Hover state dengan orange shadow. Angka di-counter-up saat halaman load.</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">ActivityTimeline: timeline dengan warna dot yang vivid, timestamp font mono, lokasi dan kWh lebih prominent.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Mini sparkline chart di PersonalHero untuk visualisasi trend 7 hari dalam satu widget.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Quick Action button "Log Charging" yang floating/prominent di dashboard — shortcut langsung ke /charging.</span></div>
+      </div>
+    </div>
+
+    <!-- Charging -->
+    <div class="page-card">
+      <div class="page-card-header">
+        <div>
+          <div class="page-card-route">/charging</div>
+          <div class="page-card-name">Log Sesi Charging</div>
+        </div>
+        <span class="card-badge green">Light Update</span>
+      </div>
+      <div class="page-card-body">
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">ChargingForm: redesign form dengan step-by-step atau grouped fields. Input styling konsisten dengan design system baru (rounded, bordered, focus orange ring).</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">SessionList: card layout dengan badge charger type berwarna, energy dan cost prominent, timestamp font mono.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Success state setelah submit form: micro-animation konfirmasi yang satisfying (checkmark + brief color flash).</span></div>
+        <div class="change-row"><span class="change-tag tag-keep">Keep</span><span class="change-text">Struktur field data tetap sama: location, kWh, cost, duration, charger type, date.</span></div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="page-card">
+      <div class="page-card-header">
+        <div>
+          <div class="page-card-route">/history</div>
+          <div class="page-card-name">Riwayat Sesi</div>
+        </div>
+        <span class="card-badge blue">Significant Update</span>
+      </div>
+      <div class="page-card-body">
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">HistorySummary: 4 stat card di atas dengan warna accent. Nomor besar, label kecil. Tata letak grid 2x2 di mobile, 4x1 di desktop.</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">HistoryFilters: filter bar yang clean dengan chip-style filter (pill buttons). Date range picker yang lebih visual.</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">HistorySessionCard: card lebih rich — charger type badge berwarna, energy vs cost side by side, durasi + lokasi jelas.</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">SessionDetailModal: tampilan modal yang lebih polished, edit/delete dengan konfirmasi yang friendly (bukan browser dialog).</span></div>
+      </div>
+    </div>
+
+    <!-- Analytics -->
+    <div class="page-card">
+      <div class="page-card-header">
+        <div>
+          <div class="page-card-route">/analytics</div>
+          <div class="page-card-name">Analitik (BARU — harus dibangun)</div>
+        </div>
+        <span class="card-badge" style="background: rgba(6,214,160,0.12); color: #05A87E;">Build From Scratch</span>
+      </div>
+      <div class="page-card-body">
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Monthly Energy Chart: bar chart per bulan, warna gradient orange-to-yellow. Recharts BarChart dengan tooltip custom.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Cost Trend: line chart biaya per minggu/bulan. Area chart dengan fill transparan orange.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Charger Type Distribution: donut chart — breakdown AC vs DC usage. Teal vs orange.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Top Locations: ranked list dengan horizontal progress bar per lokasi (frekuensi kunjungan).</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Efficiency Score (gamifikasi ringan): badge/score berdasarkan konsistensi charging, average cost/kWh vs target. Memberi sense of achievement.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Period Switcher: toggle filter Minggu / Bulan / Tahun untuk semua chart sekaligus.</span></div>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="page-card">
+      <div class="page-card-header">
+        <div>
+          <div class="page-card-route">/profile</div>
+          <div class="page-card-name">Profil & Preferensi</div>
+        </div>
+        <span class="card-badge green">Light Update</span>
+      </div>
+      <div class="page-card-body">
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">ProfileHeader: avatar lebih besar dengan warna ring orange. Nama dan email lebih prominent. Plan badge jelas.</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">EVPreferencesCard: form yang lebih clean, toggle yang styled, currency selector yang branded.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Dark/Light Mode Toggle: user bisa pilih tema di sini. Default light, optional dark.</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">DangerZone: tetap ada tapi styled lebih subtle — bukan dominan merah, cukup outlined warning.</span></div>
+      </div>
+    </div>
+
+    <!-- Sidebar/Nav -->
+    <div class="page-card">
+      <div class="page-card-header">
+        <div>
+          <div class="page-card-route">layout</div>
+          <div class="page-card-name">Sidebar & Navigasi</div>
+        </div>
+        <span class="card-badge" style="background: rgba(255,107,53,0.12); color: var(--volt-orange);">Major Rework</span>
+      </div>
+      <div class="page-card-body">
+        <div class="change-row"><span class="change-tag tag-rework">Rework</span><span class="change-text">Sidebar desktop: white background (#FFFFFF), logo VoltTrack dengan ikon petir orange di atas. Nav item dengan rounded active state (orange background, white text). Icon + label.</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">Bottom nav mobile: white dengan orange dot indicator di active item. Shadow tipis di atas. Icon lebih expressive.</span></div>
+        <div class="change-row"><span class="change-tag tag-new">New</span><span class="change-text">Sidebar footer: user avatar kecil + nama + link ke /profile. Subtle separator.</span></div>
+        <div class="change-row"><span class="change-tag tag-update">Update</span><span class="change-text">Header (mobile): putih bersih, judul halaman, avatar/menu icon. Tidak ada hamburger yang berlebihan.</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- 07 ROADMAP -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <span class="section-title">Prioritas & Roadmap</span>
+    </div>
+
+    <div class="grid-2" style="gap: 24px; align-items: start;">
+      <div>
+        <div class="card" style="margin-bottom: 0; padding: 16px 20px;">
+          <div class="card-title" style="margin-bottom: 14px;">Priority Matrix</div>
+          <div class="priority-row">
+            <div>
+              <div class="prio-badge prio-p1">P1 — Must</div>
+            </div>
+            <div>
+              <div class="prio-label">Design System & Global Layout</div>
+              <div class="prio-desc">Token warna, font, sidebar baru — fondasi semua halaman lain</div>
+            </div>
+          </div>
+          <div class="priority-row">
+            <div><div class="prio-badge prio-p1">P1 — Must</div></div>
+            <div>
+              <div class="prio-label">Dashboard Redesign</div>
+              <div class="prio-desc">Halaman paling sering dilihat — impact tertinggi</div>
+            </div>
+          </div>
+          <div class="priority-row">
+            <div><div class="prio-badge prio-p1">P1 — Must</div></div>
+            <div>
+              <div class="prio-label">Landing Page Rework</div>
+              <div class="prio-desc">First impression — harus kuat untuk konversi</div>
+            </div>
+          </div>
+          <div class="priority-row">
+            <div><div class="prio-badge prio-p2">P2 — Should</div></div>
+            <div>
+              <div class="prio-label">Analytics Page (Build)</div>
+              <div class="prio-desc">Fitur key yang belum ada — value proposition besar</div>
+            </div>
+          </div>
+          <div class="priority-row">
+            <div><div class="prio-badge prio-p2">P2 — Should</div></div>
+            <div>
+              <div class="prio-label">History Page Update</div>
+              <div class="prio-desc">Sering digunakan, perlu polish tapi bukan blocker</div>
+            </div>
+          </div>
+          <div class="priority-row">
+            <div><div class="prio-badge prio-p2">P2 — Should</div></div>
+            <div>
+              <div class="prio-label">Charging Form Update</div>
+              <div class="prio-desc">Core action tapi structural sudah cukup baik</div>
+            </div>
+          </div>
+          <div class="priority-row">
+            <div><div class="prio-badge prio-p3">P3 — Nice</div></div>
+            <div>
+              <div class="prio-label">Profile & Dark Mode Toggle</div>
+              <div class="prio-desc">Fungsional tapi bukan inti redesign</div>
+            </div>
+          </div>
+          <div class="priority-row" style="border-bottom: none;">
+            <div><div class="prio-badge prio-p3">P3 — Nice</div></div>
+            <div>
+              <div class="prio-label">Micro-animations & Polish</div>
+              <div class="prio-desc">Counter-up, loading states, hover delights</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="milestone-track">
+          <div class="milestone-item">
+            <div class="milestone-left">
+              <div class="milestone-dot filled"></div>
+              <div class="milestone-line"></div>
+            </div>
+            <div class="milestone-content">
+              <div class="milestone-phase">Phase 1</div>
+              <div class="milestone-title">Foundation</div>
+              <div class="milestone-desc">Setup design system: CSS variables, font import, color tokens, spacing. Rebuild sidebar + nav layout. Dark mode infrastructure.</div>
+              <div class="milestone-duration">~3–5 hari</div>
+            </div>
+          </div>
+          <div class="milestone-item">
+            <div class="milestone-left">
+              <div class="milestone-dot filled"></div>
+              <div class="milestone-line"></div>
+            </div>
+            <div class="milestone-content">
+              <div class="milestone-phase">Phase 2</div>
+              <div class="milestone-title">Core Pages</div>
+              <div class="milestone-desc">Landing page rework + Dashboard redesign (PersonalHero, HighlightCards, ActivityTimeline). Auth pages update.</div>
+              <div class="milestone-duration">~5–7 hari</div>
+            </div>
+          </div>
+          <div class="milestone-item">
+            <div class="milestone-left">
+              <div class="milestone-dot"></div>
+              <div class="milestone-line"></div>
+            </div>
+            <div class="milestone-content">
+              <div class="milestone-phase">Phase 3</div>
+              <div class="milestone-title">Analytics Build</div>
+              <div class="milestone-desc">Build /analytics dari nol: API endpoints jika diperlukan, chart components, period switcher, Efficiency Score.</div>
+              <div class="milestone-duration">~5–7 hari</div>
+            </div>
+          </div>
+          <div class="milestone-item">
+            <div class="milestone-left">
+              <div class="milestone-dot"></div>
+              <div class="milestone-line"></div>
+            </div>
+            <div class="milestone-content">
+              <div class="milestone-phase">Phase 4</div>
+              <div class="milestone-title">Supporting Pages</div>
+              <div class="milestone-desc">History, Charging form, Profile update. Empty states, error states, loading states untuk semua halaman.</div>
+              <div class="milestone-duration">~4–5 hari</div>
+            </div>
+          </div>
+          <div class="milestone-item">
+            <div class="milestone-left">
+              <div class="milestone-dot"></div>
+            </div>
+            <div class="milestone-content" style="padding-bottom: 0;">
+              <div class="milestone-phase">Phase 5</div>
+              <div class="milestone-title">Polish & QA</div>
+              <div class="milestone-desc">Micro-animations, mobile responsiveness final check, cross-browser, performance audit (glassmorphism dihapus = lebih ringan).</div>
+              <div class="milestone-duration">~3–4 hari</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- 08 SUCCESS METRICS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <span class="section-title">Success Metrics & Acceptance Criteria</span>
+    </div>
+    <div class="grid-2">
+      <div class="card card-green">
+        <div class="card-title">Visual Quality <span class="card-badge green">Design</span></div>
+        <p>Contrast ratio semua teks ≥ 4.5:1 (WCAG AA). Konsistensi komponen: card padding, border radius, dan font weight seragam di semua halaman. Light mode sebagai default berfungsi sempurna.</p>
+      </div>
+      <div class="card card-accent">
+        <div class="card-title">Functional <span class="card-badge">Feature</span></div>
+        <p>/analytics tidak lagi kosong — minimal 3 chart (bar monthly, line trend, donut charger type) + top locations list. Semua halaman responsive di breakpoint 375px, 768px, 1280px.</p>
+      </div>
+      <div class="card card-yellow">
+        <div class="card-title">Performance <span class="card-badge yellow">Tech</span></div>
+        <p>Penghapusan backdrop-filter glassmorphism meningkatkan rendering performance, terutama di mid-range devices. LCP (Largest Contentful Paint) dashboard ≤ 2.5s.</p>
+      </div>
+      <div class="card card-blue">
+        <div class="card-title">Brand Consistency <span class="card-badge blue">Identity</span></div>
+        <p>Color palette baru konsisten diterapkan via CSS/Tailwind tokens — tidak ada hardcoded hex di luar token. Font Plus Jakarta Sans tampil di semua halaman. Logo/wordmark terdefinisi jelas.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="prd-footer">
+  <div class="footer-brand">Volt<span>Track</span> ⚡</div>
+  <div class="footer-meta">PRD v1.0 — Web Redesign — April 2026</div>
+</div>

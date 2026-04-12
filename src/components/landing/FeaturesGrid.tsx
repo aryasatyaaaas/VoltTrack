@@ -1,47 +1,39 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Zap, DollarSign, BarChart3, CalendarDays } from "lucide-react";
+import { Zap, DollarSign, BarChart3 } from "lucide-react";
 
 const features = [
     {
         icon: Zap,
         title: "Real-time Tracking",
-        description: "Monitor every charging session with live energy consumption tracking and detailed logging.",
-        color: "text-[#00E5C3]",
-        bg: "bg-[#00E5C3]/10",
-        border: "border-[#00E5C3]/20",
+        description: "Monitor every charging session with instant energy consumption tracking and detailed logs from our app.",
+        color: "var(--volt-orange)",
+        bg: "rgba(255,107,53,0.1)",
+        border: "rgba(255,107,53,0.15)",
     },
     {
         icon: DollarSign,
         title: "Cost Analytics",
-        description: "Track spending per kWh, compare home vs public charging costs, and find the cheapest options.",
-        color: "text-[#F5A623]",
-        bg: "bg-[#F5A623]/10",
-        border: "border-[#F5A623]/20",
+        description: "Track your spending per kWh, compare home vs public charging costs, and find the cheapest options.",
+        color: "var(--volt-teal)",
+        bg: "rgba(6,214,160,0.1)",
+        border: "rgba(6,214,160,0.15)",
     },
     {
         icon: BarChart3,
         title: "Smart Insights",
-        description: "AI-powered insights about your charging patterns, efficiency trends, and optimization tips.",
-        color: "text-blue-400",
-        bg: "bg-blue-400/10",
-        border: "border-blue-400/20",
-    },
-    {
-        icon: CalendarDays,
-        title: "Charging History",
-        description: "Complete history with filters, search, and detailed breakdowns of every session.",
-        color: "text-[#00E5C3]",
-        bg: "bg-[#00E5C3]/10",
-        border: "border-[#00E5C3]/20",
-    },
+        description: "Analytics-powered insights on your vehicle's charging patterns, efficiency trends, and power optimization tips.",
+        color: "var(--volt-blue)",
+        bg: "rgba(17,138,178,0.1)",
+        border: "rgba(17,138,178,0.15)",
+    }
 ];
 
 export function FeaturesGrid() {
     return (
-        <section className="relative px-6 py-24">
-            <div className="mx-auto max-w-6xl">
+        <section className="relative px-6 py-24" style={{ background: "white" }}>
+            <div className="mx-auto max-w-5xl">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -49,16 +41,16 @@ export function FeaturesGrid() {
                     transition={{ duration: 0.5 }}
                     className="mb-16 text-center"
                 >
-                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                        Everything you need to{" "}
-                        <span className="text-[#00E5C3]">manage your EV</span>
+                    <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ color: "var(--ink)", fontFamily: "var(--font-jakarta)" }}>
+                        Everything you need for{" "}
+                        <span style={{ color: "var(--volt-orange)" }}>your EV</span>
                     </h2>
-                    <p className="mt-4 text-lg text-zinc-500">
-                        Powerful features designed for EV owners who want full control.
+                    <p className="mt-4 text-lg" style={{ color: "var(--ink-muted)" }}>
+                        Powerful features designed specifically for modern EV owners.
                     </p>
                 </motion.div>
 
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-3">
                     {features.map((feature, i) => {
                         const Icon = feature.icon;
                         return (
@@ -68,15 +60,16 @@ export function FeaturesGrid() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                                className={`group rounded-2xl border ${feature.border} bg-white/[0.03] p-6 backdrop-blur-xl transition-all hover:bg-white/[0.06] hover:border-white/[0.12]`}
+                                className="group rounded-2xl border p-8 transition-all hover:-translate-y-1 hover:shadow-xl bg-white"
+                                style={{ borderColor: "var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
                             >
-                                <div className={`mb-4 inline-flex rounded-xl ${feature.bg} p-3`}>
-                                    <Icon className={`h-6 w-6 ${feature.color}`} />
+                                <div className="mb-6 inline-flex rounded-xl p-4 transition-transform group-hover:scale-110" style={{ background: feature.bg, border: `1px solid ${feature.border}` }}>
+                                    <Icon className="h-7 w-7" style={{ color: feature.color }} />
                                 </div>
-                                <h3 className="mb-2 text-base font-semibold text-white">
+                                <h3 className="mb-3 text-lg font-bold" style={{ color: "var(--ink)" }}>
                                     {feature.title}
                                 </h3>
-                                <p className="text-sm leading-relaxed text-zinc-500">
+                                <p className="text-base leading-relaxed" style={{ color: "var(--ink-muted)" }}>
                                     {feature.description}
                                 </p>
                             </motion.div>

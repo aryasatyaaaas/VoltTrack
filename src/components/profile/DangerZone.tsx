@@ -39,16 +39,16 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
     return (
         <>
             <div className="space-y-3">
-                <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-400/70">
+                <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-500">
                     <AlertTriangle className="h-3 w-3" /> Danger Zone
                 </h3>
 
-                <Card className="space-y-3 border-red-500/10 p-6">
+                <Card className="space-y-3 border-red-200 p-6 shadow-sm">
                     {/* Logout */}
                     <button
                         onClick={handleLogout}
                         disabled={isLoggingOut}
-                        className="flex w-full items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm font-medium text-zinc-300 transition hover:bg-white/5 disabled:opacity-60"
+                        className="flex w-full items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-bold text-[var(--ink)] transition hover:bg-gray-50 disabled:opacity-60 shadow-sm"
                     >
                         {isLoggingOut ? (
                             <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />
@@ -61,7 +61,7 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
                     {/* Delete Account */}
                     <button
                         onClick={() => setShowModal(true)}
-                        className="flex w-full items-center gap-3 rounded-xl border border-red-500/10 bg-red-500/5 px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10"
+                        className="flex w-full items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100 shadow-sm"
                     >
                         <Trash2 className="h-4 w-4" />
                         Delete Account

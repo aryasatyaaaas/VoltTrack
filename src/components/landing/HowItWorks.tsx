@@ -7,35 +7,35 @@ const steps = [
     {
         num: "01",
         icon: Plus,
-        title: "Add Your Session",
-        description: "Log your charging session with energy, cost, location, and charger type.",
-        color: "from-[#00E5C3] to-[#0066FF]",
+        title: "Log Your Session",
+        description: "Record every charging session with energy, cost, location, and charger type details.",
+        color: "linear-gradient(135deg, #FF6B35, #FFD93D)",
     },
     {
         num: "02",
         icon: BarChart3,
-        title: "Track Usage & Cost",
-        description: "See real-time dashboards with weekly trends, cost breakdowns, and energy stats.",
-        color: "from-[#0066FF] to-blue-700",
+        title: "Track Usage",
+        description: "Monitor weekly trends, cost summaries, and real-time energy statistics.",
+        color: "linear-gradient(135deg, #06D6A0, #118AB2)",
     },
     {
         num: "03",
         icon: Lightbulb,
-        title: "Get Smart Insights",
-        description: "Receive AI-powered tips to optimize charging habits and reduce costs.",
-        color: "from-[#F5A623] to-amber-600",
+        title: "Gain Insights",
+        description: "Get analytics-driven tips to optimize your charging habits.",
+        color: "linear-gradient(135deg, #FFD93D, #FF6B35)",
     },
 ];
 
 export function HowItWorks() {
     return (
-        <section className="relative px-6 py-24">
+        <section className="relative px-6 py-24" style={{ background: "white" }}>
             {/* Background accent */}
-            <div className="pointer-events-none absolute inset-0">
-                <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00E5C3]/[0.03] blur-[120px]" />
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-10 blur-[120px]" style={{ background: "var(--volt-teal)" }} />
             </div>
 
-            <div className="relative mx-auto max-w-4xl">
+            <div className="relative mx-auto max-w-5xl">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -43,19 +43,19 @@ export function HowItWorks() {
                     transition={{ duration: 0.5 }}
                     className="mb-16 text-center"
                 >
-                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                    <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ color: "var(--ink)", fontFamily: "var(--font-jakarta)" }}>
                         How it works
                     </h2>
-                    <p className="mt-4 text-lg text-zinc-500">
-                        Three simple steps to smarter EV charging.
+                    <p className="mt-4 text-lg" style={{ color: "var(--ink-muted)" }}>
+                        Three easy steps to smarter EV charging control.
                     </p>
                 </motion.div>
 
                 <div className="relative">
                     {/* Connection line (desktop) */}
-                    <div className="absolute left-0 right-0 top-16 hidden h-px bg-gradient-to-r from-transparent via-white/10 to-transparent md:block" />
+                    <div className="absolute left-0 right-0 top-16 hidden h-[2px] md:block" style={{ background: "linear-gradient(to right, transparent, rgba(26,26,46,0.1), transparent)" }} />
 
-                    <div className="grid gap-8 md:grid-cols-3 md:gap-12">
+                    <div className="grid gap-12 md:grid-cols-3">
                         {steps.map((step, i) => {
                             const Icon = step.icon;
                             return (
@@ -67,20 +67,19 @@ export function HowItWorks() {
                                     transition={{ duration: 0.5, delay: i * 0.15 }}
                                     className="relative text-center"
                                 >
-                                    {/* Step number */}
-                                    <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg">
-                                        <div className={`flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br ${step.color}`}>
-                                            <Icon className="h-6 w-6 text-white" />
+                                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg ring-[6px]" style={{ background: "white", "--tw-ring-color": "rgba(255,255,255,0.8)" } as React.CSSProperties}>
+                                        <div className="flex h-full w-full items-center justify-center rounded-2xl" style={{ background: step.color }}>
+                                            <Icon className="h-7 w-7 text-white" />
                                         </div>
                                     </div>
 
-                                    <span className="mb-2 block text-xs font-bold text-zinc-600">
+                                    <span className="mb-2 block text-xs font-extrabold uppercase tracking-widest" style={{ color: "var(--volt-orange)" }}>
                                         STEP {step.num}
                                     </span>
-                                    <h3 className="mb-2 text-lg font-semibold text-white">
+                                    <h3 className="mb-3 text-xl font-bold" style={{ color: "var(--ink)" }}>
                                         {step.title}
                                     </h3>
-                                    <p className="text-sm leading-relaxed text-zinc-500">
+                                    <p className="text-base leading-relaxed p-4" style={{ color: "var(--ink-muted)" }}>
                                         {step.description}
                                     </p>
                                 </motion.div>
