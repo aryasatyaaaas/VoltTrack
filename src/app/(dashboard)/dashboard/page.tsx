@@ -29,7 +29,7 @@ export default async function DashboardPage() {
         kwh={data.hero.kwh}
         cost={data.hero.cost}
         trendPercentage={data.hero.trendPercentage}
-        sessionsCount={data.hero.sessionsThisMonth}
+        sessionsCount={data.hero.sessionsThisWeek}
         sparkData={data.weeklyTrend.map(w => w.kwh)}
       />
 
