@@ -35,7 +35,7 @@ export function HistorySessionCard({ session, onClick }: HistorySessionCardProps
             <div
                 className="flex items-center gap-4 rounded-2xl p-4 transition-all duration-200"
                 style={{
-                    background: "white",
+                    background: "var(--white)",
                     border: "1px solid var(--border)",
                     boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
                 }}

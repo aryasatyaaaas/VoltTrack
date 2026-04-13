@@ -112,7 +112,7 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
     // Helper classes
     const inputStyle = {
         border: "1px solid var(--border)",
-        background: "white",
+        background: "var(--white)",
         color: "var(--ink)",
     } as React.CSSProperties;
 
@@ -120,11 +120,13 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl" style={{ border: "1px solid var(--border)" }}>
+            <div className="relative w-full max-w-lg rounded-3xl p-6 shadow-2xl" style={{ background: "var(--white)", border: "1px solid var(--border-md)" }}>
                 <button
                     onClick={onClose}
-                    className="absolute right-4 top-4 rounded-lg p-1 transition hover:bg-gray-100"
-                    style={{ color: "var(--ink-muted)" }}
+                    className="absolute right-4 top-4 rounded-lg p-1 transition"
+                    style={{ color: "var(--muted)", background: "transparent" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-2)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 >
                     <X className="h-4 w-4" />
                 </button>
@@ -220,8 +222,11 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
                     {isEditing ? (
                         <>
                             <button onClick={() => setIsEditing(false)}
-                                className="flex-1 rounded-xl py-2.5 text-sm font-bold transition hover:bg-gray-100"
-                                style={{ border: "1px solid var(--border)", color: "var(--ink)" }}>
+                                className="flex-1 rounded-xl py-2.5 text-sm font-bold transition"
+                                style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "var(--white)" }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-2)")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "var(--white)")}
+                            >
                                 Cancel
                             </button>
                             <button onClick={handleSave} disabled={isSaving}
@@ -234,8 +239,10 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
                     ) : (
                         <>
                             <button onClick={() => setIsEditing(true)}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition hover:bg-gray-100"
-                                style={{ border: "1px solid var(--border)", color: "var(--ink)" }}>
+                                className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition"
+                                style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "var(--white)" }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-2)")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "var(--white)")}>
                                 <Pencil className="h-3.5 w-3.5" /> Edit
                             </button>
                             {confirmDelete ? (
@@ -261,7 +268,7 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
 
 function DetailRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
     return (
-        <div className="rounded-xl p-3" style={{ border: "1px solid var(--border)", background: "rgba(0,0,0,0.02)" }}>
+        <div className="rounded-xl p-3" style={{ border: "1px solid var(--border)", background: "var(--surface-2)" }}>
             <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
                 <Icon className="h-3 w-3" />
                 {label}

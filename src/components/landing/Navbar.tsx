@@ -10,8 +10,8 @@ export function Navbar() {
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="fixed top-0 left-0 right-0 z-50 border-b bg-white/80 backdrop-blur-xl"
-            style={{ borderColor: "var(--border)" }}
+            className="fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-xl"
+            style={{ borderColor: "var(--border)", background: "var(--nav-bg)" }}
         >
             <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
                 {/* Logo */}

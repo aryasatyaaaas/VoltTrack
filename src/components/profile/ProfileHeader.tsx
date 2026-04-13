@@ -161,7 +161,7 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
     });
 
     return (
-        <Card className="relative overflow-hidden p-0 border-[var(--border)] bg-white shadow-sm">
+        <Card className="relative overflow-hidden p-0 border-[var(--border)] shadow-sm">
             {/* Toast notification */}
             {toast && (
                 <div
@@ -230,8 +230,8 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
                             <input
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="rounded-xl border border-[var(--border)] bg-gray-50 px-4 py-2 text-lg font-bold outline-none transition-all"
-                                style={{ color: "var(--ink)" }}
+                                className="rounded-xl border border-[var(--border)] px-4 py-2 text-lg font-bold outline-none transition-all"
+                                style={{ color: "var(--ink)", background: "var(--surface-2)" }}
                                 onFocus={e => e.currentTarget.style.border = "1px solid var(--volt-orange)"}
                                 onBlur={e => e.currentTarget.style.border = "1px solid var(--border)"}
                                 autoFocus
@@ -250,9 +250,10 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
                             </button>
                             <button
                                 onClick={handleCancel}
-                                className="rounded-xl bg-gray-100 p-2.5 transition hover:bg-gray-200"
-                                style={{ color: "var(--ink-muted)" }}
-                            >
+                                className="rounded-xl p-2.5 transition"
+                                style={{ background: "var(--surface-2)", color: "var(--muted)" }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "var(--border-md)")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "var(--surface-2)")}>
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -261,9 +262,10 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
                             <h2 className="text-2xl font-extrabold" style={{ color: "var(--ink)" }}>{profile.name}</h2>
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="rounded-xl bg-gray-100 p-2 transition hover:bg-gray-200"
-                                style={{ color: "var(--ink-muted)" }}
-                            >
+                                className="rounded-xl p-2 transition"
+                                style={{ background: "var(--surface-2)", color: "var(--muted)" }}
+                                onMouseEnter={e => (e.currentTarget.style.background = "var(--border-md)")}
+                                onMouseLeave={e => (e.currentTarget.style.background = "var(--surface-2)")}>
                                 <Pencil className="h-4 w-4" />
                             </button>
                         </div>
@@ -271,11 +273,7 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
 
                     <p className="text-sm" style={{ color: "var(--ink-muted)" }}>{profile.email}</p>
 
-                    <div className="mt-3 flex items-center gap-3">
-                        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ink-4)" }}>
-                            Member since {memberSince}
-                        </span>
-                    </div>
+
                 </div>
             </div>
         </Card>

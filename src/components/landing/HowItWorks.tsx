@@ -29,7 +29,7 @@ const steps = [
 
 export function HowItWorks() {
     return (
-        <section className="relative px-6 py-24" style={{ background: "white" }}>
+        <section className="relative px-6 py-24" style={{ background: "var(--surface)" }}>
             {/* Background accent */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-10 blur-[120px]" style={{ background: "var(--volt-teal)" }} />
@@ -67,7 +67,7 @@ export function HowItWorks() {
                                     transition={{ duration: 0.5, delay: i * 0.15 }}
                                     className="relative text-center"
                                 >
-                                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg ring-[6px]" style={{ background: "white", "--tw-ring-color": "rgba(255,255,255,0.8)" } as React.CSSProperties}>
+                                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg ring-[6px]" style={{ background: "var(--white)", "--tw-ring-color": "rgba(255,255,255,0.8)" } as React.CSSProperties}>
                                         <div className="flex h-full w-full items-center justify-center rounded-2xl" style={{ background: step.color }}>
                                             <Icon className="h-7 w-7 text-white" />
                                         </div>

@@ -32,7 +32,7 @@ const features = [
 
 export function FeaturesGrid() {
     return (
-        <section className="relative px-6 py-24" style={{ background: "white" }}>
+        <section className="relative px-6 py-24" style={{ background: "var(--surface)" }}>
             <div className="mx-auto max-w-5xl">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -60,8 +60,8 @@ export function FeaturesGrid() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                                className="group rounded-2xl border p-8 transition-all hover:-translate-y-1 hover:shadow-xl bg-white"
-                                style={{ borderColor: "var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
+                                className="group rounded-2xl border p-8 transition-all hover:-translate-y-1 hover:shadow-xl"
+                                style={{ background: "var(--white)", borderColor: "var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
                             >
                                 <div className="mb-6 inline-flex rounded-xl p-4 transition-transform group-hover:scale-110" style={{ background: feature.bg, border: `1px solid ${feature.border}` }}>
                                     <Icon className="h-7 w-7" style={{ color: feature.color }} />

@@ -23,13 +23,29 @@ export const metadata: Metadata = {
     "Track your electric vehicle charging sessions, energy usage, and costs with VoltTrack.",
 };
 
+/** Inline script injected in <head> — runs before any paint to prevent flash */
+const themeScript = `
+(function() {
+  try {
+    var saved = localStorage.getItem('volttrack-theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = saved || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch(e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${plusJakarta.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${plusJakarta.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* No-flash theme restore — must run before CSS paint */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="font-sans antialiased">
         <CsrfProvider>
           {children}

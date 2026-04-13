@@ -48,12 +48,14 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
                     <button
                         onClick={handleLogout}
                         disabled={isLoggingOut}
-                        className="flex w-full items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-bold text-[var(--ink)] transition hover:bg-gray-50 disabled:opacity-60 shadow-sm"
-                    >
+                        className="flex w-full items-center gap-3 rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-bold text-[var(--ink)] transition disabled:opacity-60 shadow-sm"
+                        style={{ background: "var(--white)" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-2)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "var(--white)")}>
                         {isLoggingOut ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />
+                            <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--muted)" }} />
                         ) : (
-                            <LogOut className="h-4 w-4 text-zinc-500" />
+                            <LogOut className="h-4 w-4" style={{ color: "var(--muted)" }} />
                         )}
                         {isLoggingOut ? "Logging out…" : "Log Out"}
                     </button>

@@ -216,7 +216,7 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
         }
     };
 
-    const inputClasses = "w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm text-[var(--ink)] outline-none transition-all";
+    const inputClasses = "w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none transition-all";
 
     return (
         <Card className="space-y-5 p-6 border-[var(--border)] shadow-sm">
@@ -240,6 +240,7 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
                             value={defaultLocation}
                             onChange={(e) => setDefaultLocation(e.target.value)}
                             className={inputClasses}
+                            style={{ background: "var(--white)" }}
                             onFocus={e => e.currentTarget.style.border = "1px solid var(--volt-orange)"}
                             onBlur={e => e.currentTarget.style.border = "1px solid var(--border)"}
                         >
@@ -258,6 +259,7 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
                             value={currency}
                             onChange={(e) => setCurrency(e.target.value)}
                             className={inputClasses}
+                            style={{ background: "var(--white)" }}
                             onFocus={e => e.currentTarget.style.border = "1px solid var(--volt-orange)"}
                             onBlur={e => e.currentTarget.style.border = "1px solid var(--border)"}
                         >
@@ -269,7 +271,7 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
                 </div>
 
                 {/* Favorite Locations Section */}
-                <div className="space-y-3 rounded-2xl border border-[var(--border)] bg-gray-50/50 p-4">
+                <div className="space-y-3 rounded-2xl border border-[var(--border)] p-4" style={{ background: "var(--surface-2)" }}>
                     <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
                         <Star className="h-3 w-3" /> Custom Favorite Locations
                     </label>
@@ -284,7 +286,8 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
                             value={newLocationInput}
                             onChange={(e) => setNewLocationInput(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddFavorite()}
-                            className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--ink)] placeholder-gray-400 outline-none transition-all"
+                            className="min-w-0 flex-1 rounded-xl border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] outline-none transition-all"
+                            style={{ background: "var(--white)" }}
                             onFocus={e => e.currentTarget.style.border = "1px solid var(--volt-orange)"}
                             onBlur={e => e.currentTarget.style.border = "1px solid var(--border)"}
                         />

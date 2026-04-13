@@ -3,12 +3,12 @@
 import { formatCurrency } from "@/lib/utils";
 
 interface HighlightCardsProps {
-    kwh: number;
-    cost: number;
-    topLocation: string;
+    weeklyKwh: number;
+    weeklyCost: number;
+    topLocationMonth: string;
 }
 
-export function HighlightCards({ kwh, cost, topLocation }: HighlightCardsProps) {
+export function HighlightCards({ weeklyKwh, weeklyCost, topLocationMonth }: HighlightCardsProps) {
     return (
         <div className="metrics">
             <div className="metric-card">
@@ -17,8 +17,8 @@ export function HighlightCards({ kwh, cost, topLocation }: HighlightCardsProps) 
                         <path d="M8 1.5L3.5 8H7.5L6 13.5 12.5 7H8L10 1.5z" />
                     </svg>
                 </div>
-                <div className="metric-val">{kwh.toFixed(1)} <span className="unit">kWh</span></div>
-                <div className="metric-label">Total Energy</div>
+                <div className="metric-val">{weeklyKwh.toFixed(1)} <span className="unit">kWh</span></div>
+                <div className="metric-label">Total Energy — this week</div>
             </div>
             
             <div className="metric-card">
@@ -29,9 +29,9 @@ export function HighlightCards({ kwh, cost, topLocation }: HighlightCardsProps) 
                     </svg>
                 </div>
                 <div className="metric-val text-lg">
-                    {formatCurrency(Math.round(cost))}
+                    {formatCurrency(Math.round(weeklyCost))}
                 </div>
-                <div className="metric-label">Total Cost</div>
+                <div className="metric-label">Total Cost — this week</div>
             </div>
             
             <div className="metric-card">
@@ -41,8 +41,8 @@ export function HighlightCards({ kwh, cost, topLocation }: HighlightCardsProps) 
                         <circle cx="7.5" cy="6.5" r="1.5" />
                     </svg>
                 </div>
-                <div className="metric-val place">{topLocation || "—"}</div>
-                <div className="metric-label">Favorite Charging Station</div>
+                <div className="metric-val place">{topLocationMonth || "—"}</div>
+                <div className="metric-label">Favorite Station — this month</div>
             </div>
         </div>
     );

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./ThemeToggle";
 import {
     LayoutDashboard,
     BatteryCharging,
@@ -122,27 +123,30 @@ export function Header() {
                 })}
             </nav>
 
-            {/* Avatar */}
-            <Link href="/profile" className="group relative shrink-0">
-                <div
-                    className="relative h-8 w-8 overflow-hidden rounded-full transition-all group-hover:scale-105 md:h-9 md:w-9"
-                    style={{
-                        border: "2px solid var(--volt-orange)",
-                        boxShadow: "0 0 0 2px rgba(255,107,53,0.15)",
-                    }}
-                >
-                    {user?.avatarUrl ? (
-                        <img src={user.avatarUrl} alt={displayName} className="h-full w-full object-cover" />
-                    ) : (
-                        <div
-                            className="flex h-full w-full items-center justify-center text-xs font-bold text-white"
-                            style={{ background: "linear-gradient(135deg, #FF6B35, #FFD93D)" }}
-                        >
-                            {initial}
-                        </div>
-                    )}
-                </div>
-            </Link>
+            {/* Theme toggle + Avatar */}
+            <div className="flex items-center gap-2 shrink-0">
+                <ThemeToggle />
+                <Link href="/profile" className="group relative">
+                    <div
+                        className="relative h-8 w-8 overflow-hidden rounded-full transition-all group-hover:scale-105 md:h-9 md:w-9"
+                        style={{
+                            border: "2px solid var(--volt-orange)",
+                            boxShadow: "0 0 0 2px rgba(255,107,53,0.15)",
+                        }}
+                    >
+                        {user?.avatarUrl ? (
+                            <img src={user.avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+                        ) : (
+                            <div
+                                className="flex h-full w-full items-center justify-center text-xs font-bold text-white"
+                                style={{ background: "linear-gradient(135deg, #FF6B35, #FFD93D)" }}
+                            >
+                                {initial}
+                            </div>
+                        )}
+                    </div>
+                </Link>
+            </div>
         </header>
     );
 }

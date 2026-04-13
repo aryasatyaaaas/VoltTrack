@@ -5,8 +5,9 @@ import { HistorySummary } from "@/components/history/HistorySummary";
 import { HistoryFilters } from "@/components/history/HistoryFilters";
 import { HistorySessionCard } from "@/components/history/HistorySessionCard";
 import { SessionDetailModal } from "@/components/history/SessionDetailModal";
+import { ExportModal } from "@/components/history/ExportModal";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Plug, Plus, Zap } from "lucide-react";
+import { Loader2, Plug, Plus, Zap, FileDown } from "lucide-react";
 import Link from "next/link";
 import type {
     HistorySession,
@@ -53,6 +54,9 @@ export default function HistoryPage() {
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [selectedSession, setSelectedSession] = useState<HistorySession | null>(null);
+    const [showExport, setShowExport] = useState(false);
+    const [userCurrency, setUserCurrency] = useState("IDR");
+    const [userName, setUserName] = useState("User");
 
     const fetchHistory = useCallback(
         async (pageNum: number, append = false) => {
@@ -96,6 +100,18 @@ export default function HistoryPage() {
     useEffect(() => {
         fetchHistory(1);
     }, [fetchHistory]);
+
+    useEffect(() => {
+        fetch("/api/profile")
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data) {
+                    setUserCurrency(data.preferences?.currency ?? "IDR");
+                    setUserName(data.name ?? "User");
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     const handleFilterChange = (newFilters: HistoryFiltersState) => {
         setFilters(newFilters);
@@ -212,6 +228,21 @@ export default function HistoryPage() {
                         >
                             {sessions.length} total
                         </span>
+                        {/* Export button */}
+                        <button
+                            onClick={() => setShowExport(true)}
+                            className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition"
+                            style={{
+                                background: "rgba(255,107,53,0.08)",
+                                color: "var(--volt-orange)",
+                                border: "1px solid rgba(255,107,53,0.2)",
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,107,53,0.15)")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,107,53,0.08)")}
+                        >
+                            <FileDown className="h-3.5 w-3.5" />
+                            Export PDF
+                        </button>
                     </div>
 
                     {/* Date-grouped sessions */}
@@ -280,6 +311,15 @@ export default function HistoryPage() {
                 onClose={() => setSelectedSession(null)}
                 onUpdate={handleUpdate}
                 onDelete={handleDelete}
+            />
+
+            {/* Export Modal */}
+            <ExportModal
+                isOpen={showExport}
+                onClose={() => setShowExport(false)}
+                sessions={sessions}
+                currency={userCurrency}
+                userName={userName}
             />
         </div>
     );

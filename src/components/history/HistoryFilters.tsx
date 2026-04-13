@@ -42,7 +42,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
     };
 
     const pillInputStyle = {
-        background: "white",
+        background: "var(--white)",
         border: "1px solid var(--border)",
         color: "var(--ink)",
     } as React.CSSProperties;
@@ -82,9 +82,9 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                     style={{
                         background: expanded || hasActiveFilters
                             ? "var(--volt-orange)"
-                            : "white",
+                            : "var(--white)",
                         border: "1px solid var(--border)",
-                        color: expanded || hasActiveFilters ? "white" : "var(--ink-muted)",
+                        color: expanded || hasActiveFilters ? "white" : "var(--muted)",
                     }}
                 >
                     <SlidersHorizontal className="h-4 w-4" />
@@ -117,7 +117,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                                     type="date"
                                     value={filters.from}
                                     onChange={(e) => update("from", e.target.value)}
-                                    className="rounded-xl px-3 py-2 text-sm outline-none transition-all bg-white"
+                                    className="rounded-xl px-3 py-2 text-sm outline-none transition-all"
                                     style={pillInputStyle}
                                     onFocus={e => {
                                         e.currentTarget.style.border = "1px solid var(--volt-orange)";
@@ -137,7 +137,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                                     type="date"
                                     value={filters.to}
                                     onChange={(e) => update("to", e.target.value)}
-                                    className="rounded-xl px-3 py-2 text-sm outline-none transition-all bg-white"
+                                    className="rounded-xl px-3 py-2 text-sm outline-none transition-all"
                                     style={pillInputStyle}
                                     onFocus={e => {
                                         e.currentTarget.style.border = "1px solid var(--volt-orange)";
@@ -156,7 +156,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                                 <select
                                     value={filters.location}
                                     onChange={(e) => update("location", e.target.value)}
-                                    className="appearance-none rounded-xl px-4 py-2 text-sm outline-none transition-all bg-white"
+                                    className="appearance-none rounded-xl px-4 py-2 text-sm outline-none transition-all"
                                     style={pillInputStyle}
                                 >
                                     <option value="all">All Locations</option>
@@ -174,7 +174,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                                 <select
                                     value={filters.chargerType}
                                     onChange={(e) => update("chargerType", e.target.value)}
-                                    className="appearance-none rounded-xl px-4 py-2 text-sm outline-none transition-all bg-white"
+                                    className="appearance-none rounded-xl px-4 py-2 text-sm outline-none transition-all"
                                     style={pillInputStyle}
                                 >
                                     {CHARGER_TYPES.map((t) => (
@@ -187,13 +187,14 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                             {hasActiveFilters && (
                                 <button
                                     onClick={clearFilters}
-                                    className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition hover:bg-gray-100"
+                                    className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition"
                                     style={{
-                                        background: "white",
+                                        background: "var(--white)",
                                         border: "1px solid var(--border)",
                                         color: "var(--ink)",
                                     }}
-                                >
+                                    onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-2)")}
+                                    onMouseLeave={e => (e.currentTarget.style.background = "var(--white)")}>
                                     <X className="h-3 w-3" /> Clear
                                 </button>
                             )}

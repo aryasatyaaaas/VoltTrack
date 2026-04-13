@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
     {
@@ -71,6 +72,7 @@ export function Sidebar() {
             </ul>
 
             <div className="sidebar-footer">
+                <ThemeToggle />
                 <Link href="/profile" className="sidebar-icon-btn">
                     <Settings style={{ width: "20px", height: "20px", strokeWidth: "1.7" }} />
                 </Link>

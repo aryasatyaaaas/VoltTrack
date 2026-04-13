@@ -142,7 +142,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
     ]));
 
     const inputStyle = {
-        background: "white",
+        background: "var(--white)",
         border: "1px solid var(--border)",
         color: "var(--ink)"
     } as React.CSSProperties;
@@ -156,8 +156,9 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
             />
 
             <div
-                className="relative overflow-hidden rounded-3xl p-8 bg-white"
+                className="relative overflow-hidden rounded-3xl p-8"
                 style={{
+                    background: "var(--white)",
                     border: "1px solid var(--border)",
                     boxShadow: "0 8px 32px rgba(0,0,0,0.03)",
                 }}
@@ -354,7 +355,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                                     style={{
                                         ...inputStyle,
                                         background: isAutoCalculating && userProfile?.preferences?.costPerKwh
-                                            ? "var(--bg-secondary)" : "white",
+                                            ? "var(--bg-secondary)" : "var(--white)",
                                         color: "var(--ink)",
                                     }}
                                     placeholder="0"

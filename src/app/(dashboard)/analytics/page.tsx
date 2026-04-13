@@ -63,7 +63,7 @@ function getLabelKey(date: Date, period: Period): string {
     if (period === "month") {
         // Group by week-of-month (1–4)
         const week = Math.min(Math.ceil(date.getDate() / 7), 4);
-        return `Wk ${week}`;
+        return `W${week}`;
     }
     // year: group by month
     return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][date.getMonth()];
@@ -101,7 +101,7 @@ function buildLabels(period: Period): string[] {
     if (period === "week") return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     if (period === "month") {
         // 4 weeks of the current month
-        return ["Wk 1", "Wk 2", "Wk 3", "Wk 4"];
+        return ["W1", "W2", "W3", "W4"];
     }
     // year: all 12 months
     return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -111,7 +111,7 @@ function aggregateByLabel(
     sessions: HistorySession[],
     labels: string[],
     period: Period
-): { energy: number[]; cost: number[] } {
+): { energy: number[]; cost: number[]; costRaw: number[] } {
     const energyMap: Record<string, number> = {};
     const costMap: Record<string, number> = {};
     labels.forEach(l => { energyMap[l] = 0; costMap[l] = 0; });
@@ -127,6 +127,8 @@ function aggregateByLabel(
     return {
         energy: labels.map(l => Math.round(energyMap[l] * 10) / 10),
         cost:   labels.map(l => Math.round(costMap[l] * 10) / 10),
+        // raw cost in full Rp for tooltip
+        costRaw: labels.map(l => Math.round((costMap[l] ?? 0) * 1000)),
     };
 }
 
@@ -278,15 +280,15 @@ export default function AnalyticsPage() {
     const current  = filterByPeriod(allSessions, period);
     const previous = getPreviousPeriod(allSessions, period);
     const labels   = buildLabels(period);
-    const { energy, cost } = aggregateByLabel(current, labels, period);
+    const { energy, cost, costRaw } = aggregateByLabel(current, labels, period);
     const kpi      = computeKpi(current, previous, period);
     const heatmap  = buildHeatmap(allSessions);
 
     const locationColors = buildLocationColors(allSessions);
 
-    // Charger distribution — grouped by actual location name
+    // Charger distribution — grouped by current period sessions
     const locationCount: Record<string, number> = {};
-    allSessions.forEach(s => {
+    current.forEach(s => {
         locationCount[s.location] = (locationCount[s.location] ?? 0) + 1;
     });
     const total = Object.values(locationCount).reduce((a, b) => a + b, 0) || 1;
@@ -425,7 +427,24 @@ export default function AnalyticsPage() {
                         options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { display: false }, tooltip: TOOLTIP_CFG },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    ...TOOLTIP_CFG,
+                                    callbacks: {
+                                        label: (ctx: any) => {
+                                            if (ctx.dataset.label === "Energy (kWh)") {
+                                                const rp = costRaw[ctx.dataIndex];
+                                                return [
+                                                    `Energy: ${ctx.raw} kWh`,
+                                                    `Cost: Rp ${rp.toLocaleString("id-ID")}`,
+                                                ];
+                                            }
+                                            return `Cost: Rp ${(ctx.raw * 1000).toLocaleString("id-ID")}`;
+                                        },
+                                    },
+                                },
+                            },
                             scales: {
                                 x: SCALE_X,
                                 y: SCALE_Y,
@@ -559,7 +578,21 @@ export default function AnalyticsPage() {
                             maintainAspectRatio: false,
                             plugins: {
                                 legend: { display: false },
-                                tooltip: { ...TOOLTIP_CFG, callbacks: { label: (ctx: any) => `${ctx.raw} min` } },
+                                tooltip: {
+                                    ...TOOLTIP_CFG,
+                                    callbacks: {
+                                        label: (ctx: any) => {
+                                            const label = ctx.dataset.label ?? "";
+                                            const mins = ctx.raw as number;
+                                            const labelIdx = ctx.dataIndex;
+                                            const rp = costRaw[labelIdx];
+                                            return [
+                                                `${label}: ${mins} min`,
+                                                `Total cost: Rp ${rp.toLocaleString("id-ID")}`,
+                                            ];
+                                        },
+                                    },
+                                },
                             },
                             scales: { x: SCALE_X, y: SCALE_Y },
                         }}

@@ -75,7 +75,7 @@ export function HeroSection() {
                         { title: "Efficiency", val: "94%", icon: Zap, color: "var(--volt-teal)", bg: "rgba(6,214,160,0.1)" },
                         { title: "Cost Saved", val: "Rp 320k", icon: ChartBar, color: "var(--volt-blue)", bg: "rgba(17,138,178,0.1)" }
                     ].map((stat, i) => (
-                        <div key={i} className="flex flex-col items-center p-6 bg-white border border-[rgba(26,26,46,0.06)] rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                        <div key={i} className="flex flex-col items-center p-6 border rounded-2xl shadow-sm hover:shadow-md transition-shadow" style={{ background: "var(--white)", borderColor: "var(--border)" }}>
                             <div className="flex h-12 w-12 items-center justify-center rounded-full mb-4" style={{ background: stat.bg, color: stat.color }}>
                                 <stat.icon className="h-6 w-6" />
                             </div>

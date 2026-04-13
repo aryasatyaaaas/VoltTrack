@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
     {
         href: "/dashboard",
-        label: "Beranda",
+        label: "Home",
         icon: (
             <svg viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h3a1 1 0 001-1v-3h2v3a1 1 0 001 1h3a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
@@ -25,7 +25,7 @@ const navItems = [
     },
     {
         href: "/history",
-        label: "Riwayat",
+        label: "History",
         icon: (
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
                 <circle cx="10" cy="10" r="7" />
@@ -35,10 +35,20 @@ const navItems = [
     },
     {
         href: "/analytics",
-        label: "Analitik",
+        label: "Analytics",
         icon: (
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3,14 7,10 10,13 14,8 17,11" />
+            </svg>
+        ),
+    },
+    {
+        href: "/profile",
+        label: "Profile",
+        icon: (
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="10" cy="7" r="3" />
+                <path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" />
             </svg>
         ),
     },

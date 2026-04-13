@@ -3,7 +3,7 @@ import { Zap } from "lucide-react";
 
 export function Footer() {
     return (
-        <footer className="border-t px-6 py-12" style={{ background: "white", borderColor: "var(--border)" }}>
+        <footer className="border-t px-6 py-12" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
             <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 md:flex-row md:justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2 group">

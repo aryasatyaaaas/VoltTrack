@@ -74,7 +74,7 @@ export function SessionList({ refreshTrigger }: SessionListProps) {
             ) : sessions.length === 0 ? (
                 <div
                     className="flex flex-col items-center justify-center rounded-3xl py-12 text-center"
-                    style={{ background: "white", border: "1px solid var(--border)", color: "var(--ink-muted)" }}
+                    style={{ background: "var(--white)", border: "1px solid var(--border)", color: "var(--muted)" }}
                 >
                     <Zap className="mb-3 h-8 w-8 opacity-20" />
                     <p className="text-sm font-medium" style={{ color: "var(--ink)" }}>No charging sessions yet.</p>
@@ -95,7 +95,7 @@ export function SessionList({ refreshTrigger }: SessionListProps) {
                                 <div
                                     className="group flex items-center gap-4 rounded-2xl p-4 transition-all"
                                     style={{
-                                        background: "white",
+                                        background: "var(--white)",
                                         border: "1px solid var(--border)",
                                         boxShadow: "0 2px 12px rgba(0,0,0,0.02)",
                                         cursor: "default",

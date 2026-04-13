@@ -57,37 +57,61 @@
   --r-md:  12px;
   --r-lg:  16px;
   --r-xl:  24px;
+
+  /* Navbar frosted glass */
+  --nav-bg: rgba(245, 244, 240, 0.88);
 }
 
 /* ─── Dark Mode Tokens ───────────────────────────────────── */
-[data-theme="dark"] {
-  --bg-primary:    #1A1A2E;
-  --bg-secondary:  #16213E;
-  --bg-card:       #24243A;
-  --bg-sidebar:    #1E1E30;
+/* html[data-theme="dark"] has specificity (0,1,1) — beats :root (0,1,0)   */
+/* so these overrides win regardless of where other :root blocks appear.     */
+html[data-theme="dark"] {
+  /* Tailwind layer tokens */
+  --bg-primary:    #12111C;
+  --bg-secondary:  #1A1928;
+  --bg-card:       #1A1928;
+  --bg-sidebar:    #1A1928;
 
-  --ink:           #F0F0F8;
-  --ink-2:         #C8C8E0;
-  --ink-muted:     #8888A8;
+  --ink:           #F0EFE8;
+  --ink-2:         #C8C7BE;
+  --ink-muted:     #6E6D68;
 
-  --border:        rgba(255,255,255,0.08);
-  --border-strong: rgba(255,255,255,0.14);
+  --border:        rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.13);
 
-  --shadow-card:   0 1px 4px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
-  --shadow-hover:  0 4px 24px rgba(255,107,53,0.15), 0 1px 3px rgba(0,0,0,0.3);
-  --shadow-nav:    0 -1px 0 rgba(255,255,255,0.06), 0 -8px 24px rgba(0,0,0,0.2);
+  --shadow-card:   0 1px 4px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(255,255,255,0.06);
+  --shadow-hover:  0 4px 16px rgba(255,107,53,0.18);
+  --shadow-nav:    0 -1px 0 rgba(255,255,255,0.06), 0 -8px 24px rgba(0,0,0,0.3);
+
+  /* Dashboard token overrides */
+  --surface:       #12111C;
+  --white:         #1A1928;
+  --surface-2:     #211F32;
+  --ink:           #F0EFE8;
+  --ink-2:         #C8C7BE;
+  --muted:         #6E6D68;
+  --border:        rgba(255,255,255,0.07);
+  --border-md:     rgba(255,255,255,0.13);
+  --orange-soft:   rgba(255,107,53,0.14);
+  --orange-mid:    rgba(255,107,53,0.22);
+
+  /* Navbar frosted glass */
+  --nav-bg:        rgba(18, 17, 28, 0.88);
 }
 
-/* ─── Base Reset — Force Light Mode ─────────────────────── */
+/* ─── Base Reset ─────────────────────────────────────────── */
 @layer base {
   html {
     scroll-behavior: smooth;
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
   }
 
   html, body {
-    background-color: #FAFAF8;
-    color: #1A1A2E;
-    color-scheme: light;
+    background-color: var(--bg-primary, #FAFAF8);
+    color: var(--ink, #1A1A2E);
   }
 
   body {
@@ -207,7 +231,7 @@
   transition: background 0.15s;
   color: var(--muted);
 }
-.nav-item:hover { background: var(--surface); }
+.nav-item:hover { background: var(--surface-2); }
 .nav-item.active {
   background: var(--orange-soft);
   color: var(--orange);
@@ -227,7 +251,7 @@
   position: absolute;
   left: calc(100% + 12px);
   background: var(--ink);
-  color: #fff;
+  color: var(--white);
   font-size: 12px;
   padding: 5px 10px;
   border-radius: var(--radius-sm);
@@ -304,7 +328,7 @@
 
 /* ── HERO ── */
 .hero {
-  background: var(--ink);
+  background: #1A1A2E;
   border-radius: var(--radius-xl);
   padding: 26px 28px;
   display: flex; align-items: flex-end; justify-content: space-between;
@@ -528,9 +552,11 @@
   display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
   animation: fadeUp 0.35s 0.14s ease both;
 }
+/* Grid children must have min-width:0 or they'll overflow their cell */
+.row-2 > * { min-width: 0; }
 
 /* HEATMAP */
-.heatmap-wrap { overflow-x: auto; }
+.heatmap-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
 .heatmap-grid { display: grid; grid-template-columns: 36px repeat(24, 1fr); gap: 3px; min-width: 520px; }
 .hm-day-label { font-size: 11px; color: var(--muted); display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; height: 22px; }
 .hm-hour-label { font-size: 10px; color: var(--muted); text-align: center; height: 16px; display: flex; align-items: center; justify-content: center; }
@@ -570,6 +596,11 @@
   .metrics { grid-template-columns: 1fr 1fr; }
   .metrics .metric-card:last-child { grid-column: 1 / -1; }
 
+  /* Charger distribution: stack donut above table on small screens */
+  .charger-layout { flex-direction: column; align-items: center; }
+  .charger-donut-wrap { width: 140px; height: 140px; }
+  .charger-table { width: 100%; }
+
   .bottom-nav {
     display: flex !important;
   }
@@ -592,3 +623,112 @@
 }
 .bottom-nav-item.active { color: var(--orange); }
 .bottom-nav-item svg { width: 22px; height: 22px; }
+
+/* ── THEME TRANSITION — smooth but fast ── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+/* Exclude transitions that should be immediate */
+.hm-cell, canvas, img, svg * {
+  transition: none !important;
+}
+
+/* ── DARK MODE COMPONENT OVERRIDES ── */
+html[data-theme="dark"] {
+  /* KPI delta badges — brighter text on dark bg */
+  .kpi-delta.up   { background: rgba(6,214,160,0.15); color: #06D6A0; }
+  .kpi-delta.down { background: rgba(224,74,74,0.15); color: #E04A4A; }
+
+  /* Session row hover */
+  .session-row:hover { background: var(--surface-2); }
+
+  /* Heatmap cell base */
+  .hm-cell { background: var(--white); }
+}
+
+/* Inputs in dark mode — override inline background: var(--white) */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background-color: var(--surface-2) !important;
+  color: var(--ink) !important;
+  border-color: var(--border) !important;
+}
+
+/* Modal backdrop glass in dark */
+html[data-theme="dark"] .backdrop-blur-sm {
+  background: rgba(0,0,0,0.5) !important;
+}
+
+/* ── TAILWIND CLASS OVERRIDES FOR DARK MODE ── */
+/* These cover hardcoded Tailwind utility classes that don't use CSS tokens */
+
+/* bg-white → card surface */
+html[data-theme="dark"] .bg-white {
+  background-color: var(--white) !important;
+}
+
+/* bg-gray-50, bg-gray-50/50 → slightly elevated surface */
+html[data-theme="dark"] .bg-gray-50,
+html[data-theme="dark"] .bg-gray-50\/50 {
+  background-color: var(--surface-2) !important;
+}
+
+/* bg-gray-100, bg-gray-200 → hover/active surface */
+html[data-theme="dark"] .bg-gray-100,
+html[data-theme="dark"] .bg-gray-200 {
+  background-color: var(--surface-2) !important;
+}
+
+/* hover states */
+html[data-theme="dark"] .hover\:bg-gray-50:hover,
+html[data-theme="dark"] .hover\:bg-gray-100:hover,
+html[data-theme="dark"] .hover\:bg-gray-200:hover {
+  background-color: rgba(255,255,255,0.08) !important;
+}
+
+/* focus:bg-white on inputs */
+html[data-theme="dark"] .focus\:bg-white:focus {
+  background-color: var(--surface-2) !important;
+}
+
+/* red zone buttons stay legible */
+html[data-theme="dark"] .bg-red-50 {
+  background-color: rgba(239,68,68,0.1) !important;
+}
+html[data-theme="dark"] .hover\:bg-red-100:hover {
+  background-color: rgba(239,68,68,0.18) !important;
+}
+
+/* borders */
+html[data-theme="dark"] .border-gray-200 {
+  border-color: var(--border-md) !important;
+}
+
+/* text */
+html[data-theme="dark"] .text-zinc-400,
+html[data-theme="dark"] .text-zinc-500,
+html[data-theme="dark"] .text-zinc-700 {
+  color: var(--muted) !important;
+}
+html[data-theme="dark"] .placeholder-gray-400::placeholder,
+html[data-theme="dark"] .placeholder-zinc-400::placeholder {
+  color: var(--muted) !important;
+}
+
+/* hover:bg-red-500/10 */
+html[data-theme="dark"] .hover\:bg-red-500\/10:hover {
+  background-color: rgba(239,68,68,0.12) !important;
+}
+
+/* Hero card — richer blue-navy in dark mode */
+html[data-theme="dark"] .hero {
+  background: #0E0D1A;
+}
+
+/* Sidebar icon-btn hover in dark */
+html[data-theme="dark"] .sidebar-icon-btn:hover {
+  background: var(--surface-2);
+}
