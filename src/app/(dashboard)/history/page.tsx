@@ -57,6 +57,7 @@ export default function HistoryPage() {
     const [showExport, setShowExport] = useState(false);
     const [userCurrency, setUserCurrency] = useState("IDR");
     const [userName, setUserName] = useState("User");
+    const [totalCount, setTotalCount] = useState(0);
 
     const fetchHistory = useCallback(
         async (pageNum: number, append = false) => {
@@ -86,6 +87,7 @@ export default function HistoryPage() {
                     setInsights(data.insights);
                 }
                 setHasMore(data.pagination.hasMore);
+                setTotalCount(data.pagination.total);
                 setPage(pageNum);
             } catch {
                 // handled silently
@@ -112,6 +114,23 @@ export default function HistoryPage() {
             })
             .catch(() => {});
     }, []);
+
+    /** Fetch ALL sessions matching current filters — used by ExportModal */
+    const fetchAllForExport = useCallback(async (): Promise<HistorySession[]> => {
+        const params = new URLSearchParams();
+        params.set("page", "1");
+        params.set("limit", "9999"); // effectively all
+        if (filters.from) params.set("from", filters.from);
+        if (filters.to) params.set("to", filters.to);
+        if (filters.location !== "all") params.set("location", filters.location);
+        if (filters.chargerType !== "all") params.set("chargerType", filters.chargerType);
+        if (filters.search) params.set("search", filters.search);
+
+        const res = await fetch(`/api/history?${params}`);
+        if (!res.ok) return [];
+        const data: HistoryResponse = await res.json();
+        return data.sessions;
+    }, [filters]);
 
     const handleFilterChange = (newFilters: HistoryFiltersState) => {
         setFilters(newFilters);
@@ -226,7 +245,7 @@ export default function HistoryPage() {
                             className="text-[10px] font-medium"
                             style={{ color: "var(--ink-muted)" }}
                         >
-                            {sessions.length} total
+                            {totalCount} total
                         </span>
                         {/* Export button */}
                         <button
@@ -317,7 +336,8 @@ export default function HistoryPage() {
             <ExportModal
                 isOpen={showExport}
                 onClose={() => setShowExport(false)}
-                sessions={sessions}
+                fetchAll={fetchAllForExport}
+                totalCount={totalCount}
                 currency={userCurrency}
                 userName={userName}
             />

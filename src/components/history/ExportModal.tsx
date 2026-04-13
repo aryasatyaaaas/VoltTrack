@@ -8,13 +8,15 @@ import { exportHistoryPDF } from "@/lib/exportPDF";
 interface ExportModalProps {
     isOpen: boolean;
     onClose: () => void;
-    /** All sessions currently loaded (already filtered by the page's filter state) */
-    sessions: HistorySession[];
+    /** Fetches ALL sessions matching the active page filters */
+    fetchAll: () => Promise<HistorySession[]>;
+    /** Real total count from pagination.total */
+    totalCount: number;
     currency?: string;
     userName?: string;
 }
 
-export function ExportModal({ isOpen, onClose, sessions, currency = "IDR", userName = "User" }: ExportModalProps) {
+export function ExportModal({ isOpen, onClose, fetchAll, totalCount, currency = "IDR", userName = "User" }: ExportModalProps) {
     const [from, setFrom] = useState("");
     const [to, setTo] = useState("");
     const [useCustomRange, setUseCustomRange] = useState(false);
@@ -22,25 +24,33 @@ export function ExportModal({ isOpen, onClose, sessions, currency = "IDR", userN
 
     if (!isOpen) return null;
 
-    const filteredSessions = useCustomRange
-        ? sessions.filter((s) => {
-            const d = new Date(s.sessionDate);
-            const fromOk = from ? d >= new Date(from) : true;
-            const toOk = to ? d <= new Date(to + "T23:59:59") : true;
-            return fromOk && toOk;
-        })
-        : sessions;
-
     const period = useCustomRange
         ? [from, to].filter(Boolean).join(" → ") || "Custom"
         : "Filtered view";
 
+    // Estimated count shown in preview (actual fetch happens on export)
+    const previewCount = totalCount;
+
     const handleExport = async () => {
-        if (filteredSessions.length === 0) return;
         setIsExporting(true);
         try {
+            // Fetch ALL matching sessions fresh from API
+            let allSessions = await fetchAll();
+
+            // If user added an extra date range on top, filter client-side
+            if (useCustomRange && (from || to)) {
+                allSessions = allSessions.filter((s) => {
+                    const d = new Date(s.sessionDate);
+                    const fromOk = from ? d >= new Date(from) : true;
+                    const toOk = to ? d <= new Date(to + "T23:59:59") : true;
+                    return fromOk && toOk;
+                });
+            }
+
+            if (allSessions.length === 0) return;
+
             await exportHistoryPDF({
-                sessions: filteredSessions,
+                sessions: allSessions,
                 currency,
                 userName,
                 period,
@@ -111,7 +121,7 @@ export function ExportModal({ isOpen, onClose, sessions, currency = "IDR", userN
                 >
                     <Filter className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--volt-orange)" }} />
                     <span>
-                        Currently showing <strong style={{ color: "var(--ink)" }}>{sessions.length} sessions</strong> based on active filters
+                        Will export <strong style={{ color: "var(--ink)" }}>{previewCount} sessions</strong> matching active filters
                     </span>
                 </div>
 
@@ -166,18 +176,19 @@ export function ExportModal({ isOpen, onClose, sessions, currency = "IDR", userN
                 <div
                     className="mb-5 rounded-2xl p-3 text-center text-sm"
                     style={{
-                        background: filteredSessions.length > 0 ? "rgba(6,214,160,0.08)" : "rgba(255,107,53,0.06)",
-                        border: `1px solid ${filteredSessions.length > 0 ? "rgba(6,214,160,0.2)" : "rgba(255,107,53,0.15)"}`,
+                        background: previewCount > 0 ? "rgba(6,214,160,0.08)" : "rgba(255,107,53,0.06)",
+                        border: `1px solid ${previewCount > 0 ? "rgba(6,214,160,0.2)" : "rgba(255,107,53,0.15)"}`,
                     }}
                 >
-                    {filteredSessions.length > 0 ? (
+                    {previewCount > 0 ? (
                         <span style={{ color: "var(--ink)" }}>
                             📄 PDF will include{" "}
-                            <strong style={{ color: "#06D6A0" }}>{filteredSessions.length} session{filteredSessions.length !== 1 ? "s" : ""}</strong>
+                            <strong style={{ color: "#06D6A0" }}>{previewCount} session{previewCount !== 1 ? "s" : ""}</strong>
+                            {useCustomRange && (from || to) && " (date filter applied)"}
                         </span>
                     ) : (
                         <span style={{ color: "var(--volt-orange)" }}>
-                            No sessions match this date range
+                            No sessions found
                         </span>
                     )}
                 </div>
@@ -195,7 +206,7 @@ export function ExportModal({ isOpen, onClose, sessions, currency = "IDR", userN
                     </button>
                     <button
                         onClick={handleExport}
-                        disabled={isExporting || filteredSessions.length === 0}
+                        disabled={isExporting || previewCount === 0}
                         className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition disabled:opacity-50"
                         style={{
                             background: "linear-gradient(135deg, #FF6B35 0%, #FFD93D 100%)",
