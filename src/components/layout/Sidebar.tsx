@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
@@ -46,8 +47,25 @@ const navItems = [
     },
 ];
 
+interface UserInfo {
+    name: string;
+    avatarUrl: string | null;
+}
+
 export function Sidebar() {
     const pathname = usePathname();
+    const [user, setUser] = useState<UserInfo | null>(null);
+
+    useEffect(() => {
+        fetch("/api/profile")
+            .then((r) => r.ok ? r.json() : null)
+            .then((data) => {
+                if (data) setUser({ name: data.name ?? "User", avatarUrl: data.avatarUrl ?? null });
+            })
+            .catch(() => {});
+    }, [pathname]);
+
+    const initial = (user?.name ?? "U").charAt(0).toUpperCase();
 
     return (
         <aside className="sidebar">
@@ -76,10 +94,20 @@ export function Sidebar() {
                 <Link href="/profile" className="sidebar-icon-btn">
                     <Settings style={{ width: "20px", height: "20px", strokeWidth: "1.7" }} />
                 </Link>
-                <div className="user-avatar">N</div>
+
+                {/* Avatar — links to profile */}
+                <Link href="/profile" className="user-avatar" style={{ overflow: "hidden", textDecoration: "none" }}>
+                    {user?.avatarUrl ? (
+                        <img
+                            src={user.avatarUrl}
+                            alt={user.name}
+                            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                        />
+                    ) : (
+                        initial
+                    )}
+                </Link>
             </div>
         </aside>
     );
 }
-
-

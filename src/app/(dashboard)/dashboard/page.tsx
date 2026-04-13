@@ -15,9 +15,8 @@ export default async function DashboardPage() {
   const weeklyKwh = thisWeek.kwh;
   const weeklyCost = thisWeek.cost;
 
-  // Favorite station this month = top from locationBreakdown (already filtered to all-time;
-  // we use energyBreakdown which is all-time, label it as "this month" on the card)
-  const topLocationMonth = data.energyBreakdown.locationBreakdown[0]?.name ?? "—";
+  // Favorite station = most visited location this calendar month
+  const topLocationMonth = data.energyBreakdown.topLocationThisMonth ?? "—";
 
   // Extract name for greeting
   const name = data.greeting.split(", ")[1] || data.greeting || "User";

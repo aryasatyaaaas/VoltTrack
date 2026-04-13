@@ -109,7 +109,10 @@ async function getHeroData(userId: string) {
 
 // ─── Energy breakdown using groupBy (no full table scan) ─
 async function getEnergyBreakdown(userId: string) {
-    const [byLocationRaw, byChargerRaw] = await Promise.all([
+    const thisMonthStart = getMonthStart(0);
+    const thisMonthEnd = getMonthEnd(0);
+
+    const [byLocationRaw, byChargerRaw, byLocationThisMonthRaw] = await Promise.all([
         prisma.chargingSession.groupBy({
             by: ["location"],
             _sum: { energyKwh: true, cost: true },
@@ -121,6 +124,14 @@ async function getEnergyBreakdown(userId: string) {
             _sum: { energyKwh: true },
             _count: { id: true },
             where: { userId },
+        }),
+        // This month only — for the Highlight Card
+        prisma.chargingSession.groupBy({
+            by: ["location"],
+            _count: { id: true },
+            where: { userId, sessionDate: { gte: thisMonthStart, lt: thisMonthEnd } },
+            orderBy: { _count: { id: "desc" } },
+            take: 1,
         }),
     ]);
 
@@ -152,7 +163,10 @@ async function getEnergyBreakdown(userId: string) {
         }))
         .sort((a, b) => b.cost - a.cost);
 
-    return { locationBreakdown, chargerBreakdown, costByLocation };
+    // Top location this month (most frequent sessions)
+    const topLocationThisMonth = byLocationThisMonthRaw[0]?.location ?? null;
+
+    return { locationBreakdown, chargerBreakdown, costByLocation, topLocationThisMonth };
 }
 
 // ─── Weekly cost trend: single query + O(n) bucketing ────

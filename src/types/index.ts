@@ -20,6 +20,7 @@ export interface DashboardData {
         locationBreakdown: { name: string; kwh: number; percent: number; count: number }[];
         chargerBreakdown: { name: string; kwh: number; percent: number }[];
         costByLocation: { name: string; cost: number; percent: number }[];
+        topLocationThisMonth: string | null;
     };
     predictions: {
         nextChargingDay: string | null;
