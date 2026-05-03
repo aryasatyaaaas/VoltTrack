@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { CsrfProvider } from "@/components/auth/CsrfProvider";
+import { Providers } from "./providers";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -48,7 +49,9 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         <CsrfProvider>
-          {children}
+          <Providers>
+            {children}
+          </Providers>
         </CsrfProvider>
       </body>
     </html>

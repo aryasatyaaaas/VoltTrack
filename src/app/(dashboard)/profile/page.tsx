@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { EVPreferencesCard } from "@/components/profile/EVPreferencesCard";
 import { DangerZone } from "@/components/profile/DangerZone";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import type { UserProfile, UserPreferencesData } from "@/types";
 
@@ -104,15 +104,15 @@ export default function ProfilePage() {
 
     return (
         <div className="space-y-6">
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
             >
                 <ProfileHeader profile={profile} onUpdate={handleUpdateName} />
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.05 }}
@@ -121,16 +121,16 @@ export default function ProfilePage() {
                     preferences={profile.preferences}
                     onSave={handleSavePreferences}
                 />
-            </motion.div>
+            </m.div>
 
 
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.15 }}
             >
                 <DangerZone onDeleteAccount={handleDeleteAccount} />
-            </motion.div>
+            </m.div>
         </div>
     );
 }

@@ -1,3 +1,4 @@
+import { verifyCsrfRequest } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { z } from "zod";
@@ -14,6 +15,10 @@ const sessionSchema = z.object({
 
 export async function POST(req: Request) {
     try {
+        if (!(await verifyCsrfRequest(req))) {
+            return new Response(JSON.stringify({ error: "Invalid CSRF token" }), { status: 403, headers: { "Content-Type": "application/json" } });
+        }
+
         const user = await getSessionUser();
         const body = await req.json();
 

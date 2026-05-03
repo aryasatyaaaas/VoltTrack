@@ -1,3 +1,4 @@
+import { verifyCsrfRequest } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { z } from "zod";
@@ -17,6 +18,10 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        if (!(await verifyCsrfRequest(req))) {
+            return new Response(JSON.stringify({ error: "Invalid CSRF token" }), { status: 403, headers: { "Content-Type": "application/json" } });
+        }
+
         const user = await getSessionUser();
         const { id } = await params;
         const body = await req.json();
@@ -54,10 +59,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-    _req: Request,
+    req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        if (!(await verifyCsrfRequest(req))) {
+            return new Response(JSON.stringify({ error: "Invalid CSRF token" }), { status: 403, headers: { "Content-Type": "application/json" } });
+        }
+
         const user = await getSessionUser();
         const { id } = await params;
 

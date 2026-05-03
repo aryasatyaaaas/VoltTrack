@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Plus, BarChart3, Lightbulb } from "lucide-react";
 
 const steps = [
@@ -36,7 +36,7 @@ export function HowItWorks() {
             </div>
 
             <div className="relative mx-auto max-w-5xl">
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -49,7 +49,7 @@ export function HowItWorks() {
                     <p className="mt-4 text-lg" style={{ color: "var(--ink-muted)" }}>
                         Three easy steps to smarter EV charging control.
                     </p>
-                </motion.div>
+                </m.div>
 
                 <div className="relative">
                     {/* Connection line (desktop) */}
@@ -59,7 +59,7 @@ export function HowItWorks() {
                         {steps.map((step, i) => {
                             const Icon = step.icon;
                             return (
-                                <motion.div
+                                <m.div
                                     key={step.num}
                                     initial={{ opacity: 0, y: 30 }}
                                     whileInView={{ opacity: 1, y: 0 }}
@@ -82,7 +82,7 @@ export function HowItWorks() {
                                     <p className="text-base leading-relaxed p-4" style={{ color: "var(--ink-muted)" }}>
                                         {step.description}
                                     </p>
-                                </motion.div>
+                                </m.div>
                             );
                         })}
                     </div>

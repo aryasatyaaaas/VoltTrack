@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ArrowRight, Zap, BatteryCharging, ChartBar } from "lucide-react";
 
 export function HeroSection() {
@@ -15,7 +15,7 @@ export function HeroSection() {
             </div>
 
             <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center">
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
@@ -24,9 +24,9 @@ export function HeroSection() {
                 >
                     <Zap className="h-4 w-4" fill="currentColor" />
                     Smart Energy for the Future
-                </motion.div>
+                </m.div>
 
-                <motion.h1
+                <m.h1
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
@@ -35,9 +35,9 @@ export function HeroSection() {
                 >
                     Track Your EV Charging.<br />
                     <span style={{ color: "var(--volt-orange)" }}>Smarter.</span>
-                </motion.h1>
+                </m.h1>
 
-                <motion.p
+                <m.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
@@ -45,9 +45,9 @@ export function HeroSection() {
                     style={{ color: "var(--ink-muted)" }}
                 >
                     Monitor energy, track costs, and optimize your EV charging instantly — no fuss.
-                </motion.p>
+                </m.p>
 
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
@@ -61,10 +61,10 @@ export function HeroSection() {
                         Start for Free
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
-                </motion.div>
+                </m.div>
 
                 {/* Dashboard Previews or Stat Cards Array */}
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.5 }}
@@ -83,7 +83,7 @@ export function HeroSection() {
                             <p className="text-2xl font-extrabold" style={{ color: "var(--ink)", fontFamily: "var(--font-jakarta)" }}>{stat.val}</p>
                         </div>
                     ))}
-                </motion.div>
+                </m.div>
             </div>
         </section>
     );

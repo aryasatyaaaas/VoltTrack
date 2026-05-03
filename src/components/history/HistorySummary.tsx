@@ -1,60 +1,66 @@
 "use client";
 
 import { Zap, DollarSign, Hash, Activity } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { HistorySummaryData } from "@/types";
+import { getCurrencySymbol } from "@/lib/utils";
 
 interface HistorySummaryProps {
     summary: HistorySummaryData;
+    currency?: string;
 }
 
-const stats = [
-    {
-        key: "totalEnergy",
-        label: "Total Energy",
-        icon: Zap,
-        suffix: " kWh",
-        prefix: "",
-        accent: "#FF6B35",
-        accentBg: "rgba(255,107,53,0.1)",
-        accentBorder: "#FF6B35",
-    },
-    {
-        key: "totalCost",
-        label: "Total Cost",
-        icon: DollarSign,
-        suffix: "",
-        prefix: "Rp ",
-        accent: "#06D6A0",
-        accentBg: "rgba(6,214,160,0.1)",
-        accentBorder: "#06D6A0",
-    },
-    {
-        key: "totalSessions",
-        label: "Sessions",
-        icon: Hash,
-        suffix: "",
-        prefix: "",
-        accent: "#118AB2",
-        accentBg: "rgba(17,138,178,0.1)",
-        accentBorder: "#118AB2",
-    },
-    {
-        key: "avgEnergy",
-        label: "Avg / Session",
-        icon: Activity,
-        suffix: " kWh",
-        prefix: "",
-        accent: "#7B5EA7",
-        accentBg: "rgba(123,94,167,0.1)",
-        accentBorder: "#7B5EA7",
-    },
-] as const;
+export function HistorySummary({ summary, currency = "IDR" }: HistorySummaryProps) {
+    const rawSymbol = getCurrencySymbol(currency);
+    // Single-char symbols ($, €) go right before the number; longer codes (Rp, GBP) need a space
+    const costPrefix = rawSymbol.length === 1 ? rawSymbol : rawSymbol + " ";
 
-export function HistorySummary({ summary }: HistorySummaryProps) {
+    const stats = [
+        {
+            key: "totalEnergy",
+            label: "Total Energy",
+            icon: Zap,
+            suffix: " kWh",
+            prefix: "",
+            accent: "#FF6B35",
+            accentBg: "rgba(255,107,53,0.1)",
+            accentBorder: "#FF6B35",
+        },
+        {
+            key: "totalCost",
+            label: "Total Cost",
+            icon: DollarSign,
+            suffix: "",
+            prefix: costPrefix,
+            accent: "#06D6A0",
+            accentBg: "rgba(6,214,160,0.1)",
+            accentBorder: "#06D6A0",
+        },
+        {
+            key: "totalSessions",
+            label: "Sessions",
+            icon: Hash,
+            suffix: "",
+            prefix: "",
+            accent: "#118AB2",
+            accentBg: "rgba(17,138,178,0.1)",
+            accentBorder: "#118AB2",
+        },
+        {
+            key: "avgEnergy",
+            label: "Avg / Session",
+            icon: Activity,
+            suffix: " kWh",
+            prefix: "",
+            accent: "#7B5EA7",
+            accentBg: "rgba(123,94,167,0.1)",
+            accentBorder: "#7B5EA7",
+        },
+    ] as const;
+
     const values: Record<string, string> = {
         totalEnergy: summary.totalEnergy.toFixed(1),
-        totalCost: summary.totalCost.toLocaleString("id-ID"),
+        totalCost: summary.totalCost.toLocaleString("en-US"),
         totalSessions: summary.totalSessions.toString(),
         avgEnergy: summary.avgEnergy.toFixed(1),
     };
@@ -71,7 +77,7 @@ export function HistorySummary({ summary }: HistorySummaryProps) {
                 {stats.map((stat, i) => {
                     const Icon = stat.icon;
                     return (
-                        <motion.div
+                        <m.div
                             key={stat.key}
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -107,7 +113,7 @@ export function HistorySummary({ summary }: HistorySummaryProps) {
                             >
                                 {stat.label}
                             </p>
-                        </motion.div>
+                        </m.div>
                     );
                 })}
             </div>

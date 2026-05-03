@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ArrowRight, Zap } from "lucide-react";
 
 export function CTASection() {
@@ -11,7 +11,7 @@ export function CTASection() {
                 <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-10 blur-[120px]" style={{ background: "var(--volt-orange)" }} />
             </div>
 
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -41,7 +41,7 @@ export function CTASection() {
                 </div>
 
 
-            </motion.div>
+            </m.div>
         </section>
     );
 }

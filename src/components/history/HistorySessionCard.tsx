@@ -1,7 +1,7 @@
 "use client";
 
 import { Zap, MapPin, Clock } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { HistorySession } from "@/types";
 
 interface HistorySessionCardProps {
@@ -26,7 +26,7 @@ function formatTime(dateStr: string): string {
 
 export function HistorySessionCard({ session, onClick }: HistorySessionCardProps) {
     return (
-        <motion.button
+        <m.button
             onClick={onClick}
             whileHover={{ y: -2 }}
             transition={{ duration: 0.15 }}
@@ -111,6 +111,6 @@ export function HistorySessionCard({ session, onClick }: HistorySessionCardProps
                     </p>
                 </div>
             </div>
-        </motion.button>
+        </m.button>
     );
 }

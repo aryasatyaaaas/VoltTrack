@@ -1,3 +1,4 @@
+import { verifyCsrfRequest } from "@/lib/csrf";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
@@ -12,6 +13,10 @@ const registerSchema = z.object({
 
 export async function POST(req: Request) {
     try {
+        if (!(await verifyCsrfRequest(req))) {
+            return new Response(JSON.stringify({ error: "Invalid CSRF token" }), { status: 403, headers: { "Content-Type": "application/json" } });
+        }
+
         const limiter = rateLimit(getRateLimitKey(req));
         if (!limiter.success) {
             return NextResponse.json(

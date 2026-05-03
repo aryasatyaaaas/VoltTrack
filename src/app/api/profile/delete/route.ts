@@ -1,3 +1,4 @@
+import { verifyCsrfRequest } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { compare } from "bcryptjs";
@@ -10,6 +11,10 @@ const deleteSchema = z.object({
 
 export async function POST(req: Request) {
     try {
+        if (!(await verifyCsrfRequest(req))) {
+            return new Response(JSON.stringify({ error: "Invalid CSRF token" }), { status: 403, headers: { "Content-Type": "application/json" } });
+        }
+
         const sessionUser = await getSessionUser();
         const body = await req.json();
 

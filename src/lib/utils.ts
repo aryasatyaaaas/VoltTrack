@@ -11,7 +11,7 @@ export function formatKwh(value: number): string {
     return `${value.toFixed(1)} kWh`;
 }
 
-/** Format USD currency */
+/** Format IDR currency (legacy helper) */
 export function formatCurrency(value: number): string {
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -19,6 +19,32 @@ export function formatCurrency(value: number): string {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(value);
+}
+
+/**
+ * Returns a short prefix for a currency code.
+ * IDR → "Rp", USD → "$", EUR → "€".
+ * All other currencies fall back to the ISO code (e.g. "GBP", "JPY").
+ */
+export function getCurrencySymbol(code: string): string {
+    const MAP: Record<string, string> = {
+        IDR: "Rp",
+        USD: "$",
+        EUR: "€",
+    };
+    return MAP[code] ?? code;
+}
+
+/**
+ * Format a monetary value with the correct currency prefix.
+ * Uses locale "en-US" for grouping separators.
+ */
+export function formatCurrencyDynamic(value: number, currency: string): string {
+    const symbol = getCurrencySymbol(currency);
+    const formatted = Math.round(value).toLocaleString("en-US");
+    // Symbol-only currencies go before the number; code-style go before with a space
+    const needsSpace = symbol.length > 1 && !/^[$€£¥₩₹]$/.test(symbol);
+    return needsSpace ? `${symbol} ${formatted}` : `${symbol}${formatted}`;
 }
 
 /** Calculate percentage change between two numbers */

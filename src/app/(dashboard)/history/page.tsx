@@ -6,7 +6,7 @@ import { HistoryFilters } from "@/components/history/HistoryFilters";
 import { HistorySessionCard } from "@/components/history/HistorySessionCard";
 import { SessionDetailModal } from "@/components/history/SessionDetailModal";
 import { ExportModal } from "@/components/history/ExportModal";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Loader2, Plug, Plus, Zap, FileDown } from "lucide-react";
 import Link from "next/link";
 import type {
@@ -39,7 +39,10 @@ function groupByDate(sessions: HistorySession[]): { label: string; sessions: His
     return Array.from(groups.entries()).map(([label, sessions]) => ({ label, sessions }));
 }
 
+import { useQueryClient } from "@tanstack/react-query";
+
 export default function HistoryPage() {
+    const queryClient = useQueryClient();
     const [sessions, setSessions] = useState<HistorySession[]>([]);
     const [summary, setSummary] = useState<HistorySummaryData>({
         totalEnergy: 0,
@@ -74,10 +77,15 @@ export default function HistoryPage() {
                 if (filters.chargerType !== "all") params.set("chargerType", filters.chargerType);
                 if (filters.search) params.set("search", filters.search);
 
-                const res = await fetch(`/api/history?${params}`);
-                if (!res.ok) throw new Error("Failed to fetch");
-
-                const data: HistoryResponse = await res.json();
+                const data: HistoryResponse = await queryClient.fetchQuery({
+                    queryKey: ['sessions', filters, pageNum],
+                    queryFn: async () => {
+                        const res = await fetch(`/api/history?${params}`);
+                        if (!res.ok) throw new Error("Failed to fetch");
+                        return res.json();
+                    },
+                    staleTime: 30 * 1000
+                });
 
                 if (append) {
                     setSessions((prev) => [...prev, ...data.sessions]);
@@ -177,26 +185,26 @@ export default function HistoryPage() {
     return (
         <div className="space-y-7">
             {/* Bento stat grid — "Your Journey" */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.05 }}
             >
-                <HistorySummary summary={summary} />
-            </motion.div>
+                <HistorySummary summary={summary} currency={userCurrency} />
+            </m.div>
 
             {/* Search + Filters */}
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.1 }}
             >
                 <HistoryFilters filters={filters} onChange={handleFilterChange} />
-            </motion.div>
+            </m.div>
 
             {/* All Sessions */}
             {sessions.length === 0 ? (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="flex flex-col items-center justify-center py-20 text-center rounded-3xl border bg-white"
@@ -224,9 +232,9 @@ export default function HistoryPage() {
                     >
                         <Zap className="h-4 w-4" /> Log First Session
                     </Link>
-                </motion.div>
+                </m.div>
             ) : (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.35, delay: 0.15 }}
@@ -267,7 +275,7 @@ export default function HistoryPage() {
                     {/* Date-grouped sessions */}
                     <AnimatePresence mode="popLayout">
                         {grouped.map((group, gi) => (
-                            <motion.div
+                            <m.div
                                 key={group.label}
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -293,7 +301,7 @@ export default function HistoryPage() {
                                         onClick={() => setSelectedSession(session)}
                                     />
                                 ))}
-                            </motion.div>
+                            </m.div>
                         ))}
                     </AnimatePresence>
 
@@ -321,7 +329,7 @@ export default function HistoryPage() {
                             </button>
                         </div>
                     )}
-                </motion.div>
+                </m.div>
             )}
 
             {/* Detail Modal */}

@@ -19,11 +19,14 @@ model User {
 
   sessions    ChargingSession[]
   preferences UserPreferences?
+
+  @@index([createdAt])
 }
 
 model UserPreferences {
   id               String   @id @default(uuid())
   userId           String   @unique
+  evName           String   @default("BYD Atto 3")
   defaultLocation  String   @default("Home")
   costPerKwh       Float    @default(0)
   currency         String   @default("IDR")
@@ -52,4 +55,6 @@ model ChargingSession {
 
   @@index([userId, sessionDate]) // Composite: covers most queries
   @@index([sessionDate])         // For cross-user date queries
+  @@index([userId])              // Standalone userId index
+  @@index([createdAt])           // For sorting by creation time
 }

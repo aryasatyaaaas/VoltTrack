@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Zap, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
@@ -67,7 +67,7 @@ export default function LoginPage() {
                 Back to Home
             </Link>
 
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 20, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5 }}
@@ -101,14 +101,14 @@ export default function LoginPage() {
                     </div>
 
                     {error && (
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
                         >
                             <AlertCircle className="h-4 w-4 shrink-0" />
                             {error}
-                        </motion.div>
+                        </m.div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -198,7 +198,7 @@ export default function LoginPage() {
                         </Link>
                     </p>
                 </div>
-            </motion.div>
+            </m.div>
         </div>
     );
 }

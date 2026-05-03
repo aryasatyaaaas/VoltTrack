@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
 /* ─── Tailwind v4 Theme Tokens ───────────────────────────── */
 @theme {
@@ -582,10 +583,89 @@ html[data-theme="dark"] {
 .charger-pct { font-size: 13px; font-weight: 700; color: var(--ink); }
 .charger-sessions { font-size: 11px; color: var(--muted); }
 
+/* ── ANALYTICS TOPBAR (responsive layout) ── */
+/*
+  Desktop: [Analytics] .............. [Week Month Year] [This Month ▾]
+  Mobile:  [Analytics] ......................... [This Month ▾]
+           [Week Month Year]
+*/
+.analytics-topbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Title stays far left, row 1 */
+.analytics-topbar .page-title {
+  flex: 1 1 auto; /* grows to push other items right */
+}
+/* Period switcher — sits between title and picker on desktop */
+.analytics-period-row {
+  flex-shrink: 0;
+  order: 2; /* desktop: middle */
+}
+/* Picker — always far right */
+.analytics-picker-wrap {
+  position: relative;
+  flex-shrink: 0;
+  order: 3; /* desktop: last */
+}
+
+@media (max-width: 640px) {
+  /* Row 1: [Analytics (flex:1)] [Picker (order:1)] */
+  .analytics-period-row {
+    order: 3;         /* pushes to row 2 */
+    flex: 0 0 auto;
+  }
+  .analytics-picker-wrap {
+    order: 2;         /* stays row 1, right side */
+    margin-left: 0;   /* title's flex:1 already pushes it right */
+  }
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .row-2 { grid-template-columns: 1fr; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 640px) {
+  /* Analytics topbar: stack title on top, controls below */
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  /* The controls wrapper (period + nav) should wrap nicely */
+  .topbar > div:last-child {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 6px;
+  }
+
+  /* KPI cards: full-width on very small screens */
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .kpi-val { font-size: 20px; }
+  .kpi-label { font-size: 11px; }
+
+  /* Chart card: less padding */
+  .chart-card { padding: 16px; }
+
+  /* Chart header: stack legend below title */
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .chart-legend { flex-wrap: wrap; gap: 8px; }
+
+  /* Period switcher: allow shrink */
+  .period-switcher { flex-shrink: 0; }
+  .period-btn { padding: 5px 10px; font-size: 11px; }
+
+  /* Charger donut smaller on mobile */
+  .charger-donut-wrap { width: 120px; height: 120px; }
 }
 
 @media (max-width: 768px) {

@@ -1,3 +1,4 @@
+import { verifyCsrfRequest } from "@/lib/csrf";
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
@@ -24,6 +25,10 @@ function validateMagicBytes(buffer: Buffer, ext: string): boolean {
 
 export async function POST(req: Request) {
     try {
+        if (!(await verifyCsrfRequest(req))) {
+            return new Response(JSON.stringify({ error: "Invalid CSRF token" }), { status: 403, headers: { "Content-Type": "application/json" } });
+        }
+
         const user = await getSessionUser();
         const formData = await req.formData();
         const file = formData.get("avatar") as File | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Zap, DollarSign, BarChart3 } from "lucide-react";
 
 const features = [
@@ -34,7 +34,7 @@ export function FeaturesGrid() {
     return (
         <section className="relative px-6 py-24" style={{ background: "var(--surface)" }}>
             <div className="mx-auto max-w-5xl">
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -48,13 +48,13 @@ export function FeaturesGrid() {
                     <p className="mt-4 text-lg" style={{ color: "var(--ink-muted)" }}>
                         Powerful features designed specifically for modern EV owners.
                     </p>
-                </motion.div>
+                </m.div>
 
                 <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-3">
                     {features.map((feature, i) => {
                         const Icon = feature.icon;
                         return (
-                            <motion.div
+                            <m.div
                                 key={feature.title}
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
@@ -72,7 +72,7 @@ export function FeaturesGrid() {
                                 <p className="text-base leading-relaxed" style={{ color: "var(--ink-muted)" }}>
                                     {feature.description}
                                 </p>
-                            </motion.div>
+                            </m.div>
                         );
                     })}
                 </div>

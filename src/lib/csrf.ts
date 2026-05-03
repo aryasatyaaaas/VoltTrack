@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
-import { CSRF_COOKIE_NAME } from "@/lib/constants";
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "@/lib/constants";
 
 export async function generateCsrfToken(): Promise<string> {
     const token = randomUUID().replace(/-/g, "");
@@ -19,6 +19,13 @@ export async function generateCsrfToken(): Promise<string> {
 export function validateCsrfToken(cookieToken: string | undefined, headerToken: string | null): boolean {
     if (!cookieToken || !headerToken) return false;
     return cookieToken === headerToken;
+}
+
+export async function verifyCsrfRequest(req: Request): Promise<boolean> {
+    const cookieStore = await cookies();
+    const cookieToken = cookieStore.get(CSRF_COOKIE_NAME)?.value;
+    const headerToken = req.headers.get(CSRF_HEADER_NAME);
+    return validateCsrfToken(cookieToken, headerToken);
 }
 
 export { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "@/lib/constants";

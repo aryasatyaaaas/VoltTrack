@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Zap } from "lucide-react";
 
 export function Navbar() {
     return (
-        <motion.nav
+        <m.nav
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -47,6 +47,6 @@ export function Navbar() {
                     </Link>
                 </div>
             </div>
-        </motion.nav>
+        </m.nav>
     );
 }

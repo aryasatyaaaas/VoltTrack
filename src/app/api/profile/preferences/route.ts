@@ -1,3 +1,4 @@
+import { verifyCsrfRequest } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { z } from "zod";
@@ -15,6 +16,10 @@ const preferencesSchema = z.object({
 
 export async function PATCH(req: Request) {
     try {
+        if (!(await verifyCsrfRequest(req))) {
+            return new Response(JSON.stringify({ error: "Invalid CSRF token" }), { status: 403, headers: { "Content-Type": "application/json" } });
+        }
+
         const sessionUser = await getSessionUser();
         const body = await req.json();
         const result = preferencesSchema.safeParse(body);

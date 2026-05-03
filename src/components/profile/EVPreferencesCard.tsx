@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/Card";
 import { Zap, MapPin, Loader2, Star, Plus, X } from "lucide-react";
+import { useStations } from "@/hooks/useStations";
+import { m, AnimatePresence } from "framer-motion";
 import type { UserPreferencesData } from "@/types";
+import type { NormalizedStation } from "@/lib/normalizeStation";
 
 interface EVPreferencesCardProps {
     preferences: UserPreferencesData;
     onSave: (data: Partial<UserPreferencesData>) => Promise<void>;
 }
-
-const LOCATIONS = ["Home", "Office", "Public Station", "Mall", "Highway Rest Stop"];
 
 const CURRENCIES: { code: string; name: string }[] = [
     { code: "AED", name: "AED — UAE Dirham" },
@@ -182,8 +183,76 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
     const [isSaving, setIsSaving] = useState(false);
     const [saved, setSaved] = useState(false);
 
-    // Combine original options and newly added favorite locations for the defaultLocation dropdown
-    const availableDefaults = Array.from(new Set([...LOCATIONS, ...favoriteLocations]));
+    // Combobox / API states
+    const [userLat, setUserLat] = useState<number | null>(null);
+    const [userLon, setUserLon] = useState<number | null>(null);
+    const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+    const { data: stationsData } = useStations({
+        lat: userLat,
+        lon: userLon,
+        distance: userLat && userLon ? 10000 : undefined,
+        maxresults: 1000
+    });
+    const stations: NormalizedStation[] = stationsData || [];
+
+    // Fetch Location
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    setUserLat(pos.coords.latitude);
+                    setUserLon(pos.coords.longitude);
+                },
+                () => {},
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+    }, []);
+
+    const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    };
+
+    const locationSuggestions = useMemo(() => {
+        const query = newLocationInput.toLowerCase();
+        
+        let all = stations.map(s => {
+            let dist = undefined;
+            if (userLat !== null && userLon !== null && s.lat !== null && s.lon !== null) {
+                dist = getDistance(userLat, userLon, s.lat, s.lon);
+            }
+            return { title: s.name, distance: dist };
+        });
+        
+        if (query) {
+            all = all.filter(l => l.title.toLowerCase().includes(query));
+        }
+
+        all.sort((a, b) => {
+            if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
+            return 0;
+        });
+
+        const uniqueTitles = new Set();
+        const uniqueAll = [];
+        for (const item of all) {
+            if (!uniqueTitles.has(item.title) && !favoriteLocations.includes(item.title)) {
+                uniqueTitles.add(item.title);
+                uniqueAll.push(item);
+            }
+        }
+
+        return uniqueAll.slice(0, 20);
+    }, [stations, userLat, userLon, newLocationInput, favoriteLocations]);
+
+    // Use only favoriteLocations for the defaultLocation dropdown
+    const availableDefaults = Array.from(new Set([...favoriteLocations]));
 
     const hasChanges =
         defaultLocation !== preferences.defaultLocation ||
@@ -209,10 +278,18 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
         setNewLocationInput("");
     };
 
+    const handleAddFavoriteSuggestion = (title: string) => {
+        if (!favoriteLocations.includes(title)) {
+            setFavoriteLocations(prev => [...prev, title]);
+        }
+        setNewLocationInput("");
+        setShowLocationDropdown(false);
+    };
+
     const handleRemoveFavorite = (locToRemove: string) => {
         setFavoriteLocations(prev => prev.filter(l => l !== locToRemove));
         if (defaultLocation === locToRemove) {
-            setDefaultLocation(LOCATIONS[0]); // Reset to first basic option if they deleted the active default
+            setDefaultLocation(""); // Reset if they deleted the active default
         }
     };
 
@@ -244,6 +321,9 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
                             onFocus={e => e.currentTarget.style.border = "1px solid var(--volt-orange)"}
                             onBlur={e => e.currentTarget.style.border = "1px solid var(--border)"}
                         >
+                            {availableDefaults.length === 0 && (
+                                <option value="" disabled>No favorites added yet</option>
+                            )}
                             {availableDefaults.map((loc) => (
                                 <option key={loc} value={loc}>{loc}</option>
                             ))}
@@ -279,17 +359,23 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
                         Add your frequent charging spots (like &quot;Grand Indonesia&quot; or &quot;My Secret Garage&quot;) to easily pick them in your log.
                     </p>
 
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2 relative z-20">
                         <input
                             type="text"
-                            placeholder="Add new location..."
+                            placeholder="Add new location or search SPKLU..."
                             value={newLocationInput}
                             onChange={(e) => setNewLocationInput(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddFavorite()}
                             className="min-w-0 flex-1 rounded-xl border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] outline-none transition-all"
                             style={{ background: "var(--white)" }}
-                            onFocus={e => e.currentTarget.style.border = "1px solid var(--volt-orange)"}
-                            onBlur={e => e.currentTarget.style.border = "1px solid var(--border)"}
+                            onFocus={e => {
+                                setShowLocationDropdown(true);
+                                e.currentTarget.style.border = "1px solid var(--volt-orange)";
+                            }}
+                            onBlur={e => {
+                                setTimeout(() => setShowLocationDropdown(false), 200);
+                                e.currentTarget.style.border = "1px solid var(--border)";
+                            }}
                         />
                         <button
                             type="button"
@@ -300,6 +386,38 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
                         >
                             <Plus className="h-4 w-4" /> Add
                         </button>
+                        
+                        <AnimatePresence>
+                            {showLocationDropdown && locationSuggestions.length > 0 && (
+                                <m.div
+                                    initial={{ opacity: 0, y: -5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -5 }}
+                                    className="absolute left-0 right-24 top-full mt-1 max-h-48 overflow-y-auto rounded-xl border border-[var(--border)] bg-white py-1 shadow-lg no-scrollbar"
+                                >
+                                    {locationSuggestions.map((loc, i) => (
+                                        <button
+                                            key={i}
+                                            type="button"
+                                            className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                handleAddFavoriteSuggestion(loc.title);
+                                            }}
+                                        >
+                                            <span className="truncate pr-4 font-medium" style={{ color: "var(--ink)" }}>
+                                                {loc.title}
+                                            </span>
+                                            {loc.distance !== undefined && (
+                                                <span className="flex-shrink-0 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
+                                                    {loc.distance.toFixed(1)} km
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </m.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Chips */}

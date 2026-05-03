@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, SlidersHorizontal, X, Calendar, MapPin, Plug } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import type { HistoryFiltersState } from "@/types";
 
 const CHARGER_TYPES = [
@@ -20,6 +20,9 @@ interface HistoryFiltersProps {
 export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
     const [expanded, setExpanded] = useState(false);
     const [locations, setLocations] = useState<string[]>([]);
+    // Local search: user types here freely; onChange is only triggered on submit
+    const [localSearch, setLocalSearch] = useState(filters.search);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetch("/api/history/locations")
@@ -30,7 +33,18 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
             .catch(() => { });
     }, []);
 
-    const update = (key: keyof HistoryFiltersState, value: string) => {
+    // Sync local search if parent resets filters (e.g. clear button)
+    useEffect(() => {
+        setLocalSearch(filters.search);
+    }, [filters.search]);
+
+    /** Commit the local search value to the parent */
+    const commitSearch = () => {
+        onChange({ ...filters, search: localSearch.trim() });
+    };
+
+    /** Other filter fields change immediately */
+    const update = (key: keyof Omit<HistoryFiltersState, "search">, value: string) => {
         onChange({ ...filters, [key]: value });
     };
 
@@ -38,6 +52,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
         filters.from || filters.to || filters.location !== "all" || filters.chargerType !== "all" || filters.search;
 
     const clearFilters = () => {
+        setLocalSearch("");
         onChange({ from: "", to: "", location: "all", chargerType: "all", search: "" });
     };
 
@@ -58,11 +73,15 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                         style={{ color: "var(--volt-orange)" }}
                     />
                     <input
+                        ref={inputRef}
                         type="text"
-                        value={filters.search}
-                        onChange={(e) => update("search", e.target.value)}
+                        value={localSearch}
+                        onChange={(e) => setLocalSearch(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") commitSearch();
+                        }}
                         placeholder="Search sessions..."
-                        className="w-full rounded-2xl py-3.5 pl-11 pr-4 text-sm outline-none transition-all"
+                        className="w-full rounded-2xl py-3.5 pl-11 pr-28 text-sm outline-none transition-all"
                         style={pillInputStyle}
                         onFocus={e => {
                             e.currentTarget.style.border = "1px solid var(--volt-orange)";
@@ -73,10 +92,26 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                             e.currentTarget.style.boxShadow = "none";
                         }}
                     />
+                    {/* Inline Search button */}
+                    <button
+                        id="history-search-btn"
+                        onClick={commitSearch}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all"
+                        style={{
+                            background: "var(--volt-orange)",
+                            color: "white",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                    >
+                        <Search className="h-3 w-3" />
+                        Search
+                    </button>
                 </div>
 
                 {/* Filter toggle pill */}
                 <button
+                    id="history-filter-toggle-btn"
                     onClick={() => setExpanded(!expanded)}
                     className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl transition-all"
                     style={{
@@ -94,7 +129,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
             {/* Expanded filter panel */}
             <AnimatePresence>
                 {expanded && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
@@ -186,6 +221,7 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                             {/* Clear button */}
                             {hasActiveFilters && (
                                 <button
+                                    id="history-clear-filters-btn"
                                     onClick={clearFilters}
                                     className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition"
                                     style={{
@@ -194,12 +230,13 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
                                         color: "var(--ink)",
                                     }}
                                     onMouseEnter={e => (e.currentTarget.style.background = "var(--surface-2)")}
-                                    onMouseLeave={e => (e.currentTarget.style.background = "var(--white)")}>
+                                    onMouseLeave={e => (e.currentTarget.style.background = "var(--white)")}
+                                >
                                     <X className="h-3 w-3" /> Clear
                                 </button>
                             )}
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </div>

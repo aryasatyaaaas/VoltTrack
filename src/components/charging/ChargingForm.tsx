@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Zap, MapPin, Calendar, Clock, Loader2, Plug } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Zap, MapPin, Calendar, Clock, Loader2, Plug, Star } from "lucide-react";
+import { m, AnimatePresence } from "framer-motion";
 import type { UserProfile } from "@/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useStations } from "@/hooks/useStations";
 
 const formSchema = z.object({
     kwh: z.number().positive("Energy must be greater than 0"),
@@ -22,24 +25,46 @@ type FormValues = z.infer<typeof formSchema>;
 const LOCATION_suggestions = ["Home", "Office", "Public Station", "Mall", "Highway Rest Stop"];
 const CHARGER_TYPES = ["AC", "CCS2", "CHAdeMO"];
 
+import type { NormalizedStation } from "@/lib/normalizeStation";
+
 interface ChargingFormProps {
     onSuccess?: () => void;
 }
 
 export function ChargingForm({ onSuccess }: ChargingFormProps) {
+    const searchParams = useSearchParams();
+    const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [isAutoCalculating, setIsAutoCalculating] = useState(true);
+    
+    const queryClient = useQueryClient();
+
+    // Combobox / API states
+    const [userLat, setUserLat] = useState<number | null>(null);
+    const [userLon, setUserLon] = useState<number | null>(null);
+    const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+    const { data: stationsData } = useStations({
+        lat: userLat,
+        lon: userLon,
+        distance: userLat && userLon ? 10000 : undefined,
+        maxresults: 1000
+    });
+    const stations: NormalizedStation[] = stationsData || [];
+
+    const urlLocation = searchParams.get("location") || "";
+    const urlType = searchParams.get("type") || "AC";
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             kwh: undefined,
             date: new Date().toISOString().slice(0, 16),
-            location: "",
+            location: urlLocation,
             cost: undefined,
-            chargerType: "AC",
+            chargerType: CHARGER_TYPES.includes(urlType.toUpperCase()) ? urlType.toUpperCase() : "AC",
             duration: undefined,
         },
     });
@@ -75,6 +100,20 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         }
     }, [watchedKwh, userProfile, isAutoCalculating, form]);
 
+    // Fetch Location
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    setUserLat(pos.coords.latitude);
+                    setUserLon(pos.coords.longitude);
+                },
+                () => {},
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+    }, []);
+
     const handleCostManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.valueAsNumber;
         if (!Number.isNaN(val)) {
@@ -86,10 +125,8 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         }
     };
 
-    const onSubmit = async (data: FormValues) => {
-        setIsSubmitting(true);
-        setSuccessMessage(null);
-        try {
+    const submitMutation = useMutation({
+        mutationFn: async (data: FormValues) => {
             const csrfRes = await fetch("/api/csrf");
             if (!csrfRes.ok) throw new Error("Failed to get CSRF token");
             const { csrfToken } = await csrfRes.json();
@@ -101,7 +138,13 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
             });
 
             if (!response.ok) throw new Error("Failed to save session");
-
+            return response.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+            router.refresh();
+            
             setSuccessMessage("Session logged! ⚡");
             form.reset({
                 kwh: undefined,
@@ -114,6 +157,14 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
             setIsAutoCalculating(true);
             if (onSuccess) onSuccess();
             setTimeout(() => setSuccessMessage(null), 3000);
+        }
+    });
+
+    const onSubmit = async (data: FormValues) => {
+        setIsSubmitting(true);
+        setSuccessMessage(null);
+        try {
+            await submitMutation.mutateAsync(data);
         } catch (error) {
             console.error(error);
         } finally {
@@ -135,11 +186,86 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
     })();
 
     const defaultLocation = userProfile?.preferences?.defaultLocation || "";
-    const allLocations = Array.from(new Set([
-        ...(defaultLocation ? [defaultLocation] : []),
-        ...LOCATION_suggestions,
-        ...(userProfile?.preferences?.favoriteLocations || []),
-    ]));
+    
+    // Distance helper
+    const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    };
+
+    const watchedLocation = form.watch("location") || "";
+    const locationSuggestions = useMemo(() => {
+        const favs = userProfile?.preferences?.favoriteLocations || [];
+        
+        const customLocs = Array.from(new Set([
+            ...favs,
+            ...(urlLocation ? [urlLocation] : []),
+            ...(defaultLocation ? [defaultLocation] : []),
+            ...LOCATION_suggestions,
+        ])).map(title => ({ 
+            title, 
+            distance: undefined as number | undefined,
+            isFav: favs.includes(title)
+        }));
+
+        const ocmLocs = stations.map(s => {
+            let dist = undefined;
+            if (userLat !== null && userLon !== null && s.lat !== null && s.lon !== null) {
+                dist = getDistance(userLat, userLon, s.lat, s.lon);
+            }
+            return { 
+                title: s.name, 
+                distance: dist, 
+                isFav: favs.includes(s.name)
+            };
+        });
+
+        let all = [...customLocs, ...ocmLocs];
+
+        if (watchedLocation) {
+            const query = watchedLocation.toLowerCase();
+            all = all.filter(l => l.title.toLowerCase().includes(query));
+        }
+
+        all.sort((a, b) => {
+            // 1. Favorites always at top
+            if (a.isFav && !b.isFav) return -1;
+            if (!a.isFav && b.isFav) return 1;
+            
+            // 2. No distance vs Distance
+            if (a.distance === undefined && b.distance !== undefined) {
+                // If both are favorites, prioritize the one WITH distance so the user sees the km
+                if (a.isFav && b.isFav) return 1;
+                // For non-favorites, put custom generic locations (Home, Office) above OCM lists
+                return -1;
+            }
+            if (a.distance !== undefined && b.distance === undefined) {
+                if (a.isFav && b.isFav) return -1;
+                return 1;
+            }
+            
+            // 3. Both have distance
+            if (a.distance !== undefined && b.distance !== undefined) {
+                return a.distance - b.distance;
+            }
+            return 0;
+        });
+
+        const uniqueTitles = new Set();
+        const uniqueAll = [];
+        for (const item of all) {
+            if (!uniqueTitles.has(item.title)) {
+                uniqueTitles.add(item.title);
+                uniqueAll.push(item);
+            }
+        }
+
+        return uniqueAll.slice(0, 20);
+    }, [stations, userLat, userLon, watchedLocation, urlLocation, defaultLocation, userProfile]);
 
     const inputStyle = {
         background: "var(--white)",
@@ -172,7 +298,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                 {/* Success toast */}
                 <AnimatePresence>
                     {successMessage && (
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, y: -8, scale: 0.96 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.96 }}
@@ -180,20 +306,20 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                             style={{ background: "rgba(16,185,129,0.1)", backdropFilter: "blur(8px)" }}
                         >
                             {successMessage}
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
 
                 {/* Header */}
                 <div className="mb-8 flex items-center gap-3">
-                    <motion.div
+                    <m.div
                         animate={{ scale: [1, 1.15, 1] }}
                         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         className="flex h-10 w-10 items-center justify-center rounded-2xl"
                         style={{ background: "rgba(255,107,53,0.1)" }}
                     >
                         <Zap className="h-5 w-5" style={{ color: "var(--volt-orange)" }} />
-                    </motion.div>
+                    </m.div>
                     <h2 className="text-2xl font-bold tracking-tight" style={{ color: "var(--ink)" }}>Log a Charge</h2>
                 </div>
 
@@ -298,24 +424,57 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                                 className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2"
                                 style={{ color: "var(--volt-orange)" }}
                             />
-                            <select
+                            <input
                                 {...form.register("location")}
-                                className="w-full appearance-none rounded-2xl py-3 pl-10 pr-4 text-sm outline-none transition-all"
+                                type="text"
+                                placeholder="Search SPKLU or type custom..."
+                                className="w-full rounded-2xl py-3 pl-10 pr-4 text-sm outline-none transition-all"
                                 style={inputStyle}
+                                autoComplete="off"
                                 onFocus={e => {
+                                    setShowLocationDropdown(true);
                                     e.currentTarget.style.border = "1px solid var(--volt-orange)";
                                     e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,107,53,0.1)";
                                 }}
                                 onBlur={e => {
+                                    setTimeout(() => setShowLocationDropdown(false), 200);
                                     e.currentTarget.style.border = "1px solid var(--border)";
                                     e.currentTarget.style.boxShadow = "none";
                                 }}
-                            >
-                                <option value="" disabled>Select location...</option>
-                                {allLocations.map((loc) => (
-                                    <option key={loc} value={loc}>{loc}</option>
-                                ))}
-                            </select>
+                            />
+                            <AnimatePresence>
+                                {showLocationDropdown && locationSuggestions.length > 0 && (
+                                    <m.div
+                                        initial={{ opacity: 0, y: -5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -5 }}
+                                        className="absolute left-0 right-0 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-xl border border-[var(--border)] bg-white py-1 shadow-lg no-scrollbar"
+                                    >
+                                        {locationSuggestions.map((loc, i) => (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    form.setValue("location", loc.title, { shouldValidate: true });
+                                                    setShowLocationDropdown(false);
+                                                }}
+                                            >
+                                                <span className="truncate pr-4 font-medium flex items-center gap-1.5" style={{ color: "var(--ink)" }}>
+                                                    {loc.isFav && <Star className="h-3 w-3 flex-shrink-0 text-orange-500 fill-orange-500" />}
+                                                    <span className="truncate">{loc.title}</span>
+                                                </span>
+                                                {loc.distance !== undefined && (
+                                                    <span className="flex-shrink-0 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
+                                                        {loc.distance.toFixed(1)} km
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </m.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                         {form.formState.errors.location && (
                             <p className="text-xs text-red-500">{form.formState.errors.location.message}</p>
@@ -401,7 +560,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                     </div>
 
                     {/* ── Save Button ── */}
-                    <motion.button
+                    <m.button
                         type="submit"
                         disabled={isSubmitting}
                         whileHover={{ scale: 1.02 }}
@@ -425,7 +584,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                                 Save Session
                             </>
                         )}
-                    </motion.button>
+                    </m.button>
                 </form>
             </div>
         </div>
