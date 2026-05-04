@@ -21,10 +21,10 @@ CREATE TABLE IF NOT EXISTS "UserPreferences" (
     CONSTRAINT "UserPreferences_pkey" PRIMARY KEY ("id")
 );
 
--- Add unique index (idempotent)
+-- Add unique index (safe — IF NOT EXISTS prevents duplicate error)
 CREATE UNIQUE INDEX IF NOT EXISTS "UserPreferences_userId_key" ON "UserPreferences"("userId");
 
--- Add foreign key if not exists
+-- Add foreign key only if it doesn't exist
 DO $$ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'UserPreferences_userId_fkey'
