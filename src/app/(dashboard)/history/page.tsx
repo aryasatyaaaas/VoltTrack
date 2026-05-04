@@ -298,6 +298,7 @@ export default function HistoryPage() {
                                     <HistorySessionCard
                                         key={session.id}
                                         session={session}
+                                        currency={userCurrency}
                                         onClick={() => setSelectedSession(session)}
                                     />
                                 ))}

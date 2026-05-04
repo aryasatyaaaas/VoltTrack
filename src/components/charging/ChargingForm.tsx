@@ -22,7 +22,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const LOCATION_suggestions = ["Home", "Office", "Public Station", "Mall", "Highway Rest Stop"];
 const CHARGER_TYPES = ["AC", "CCS2", "CHAdeMO"];
 
 import type { NormalizedStation } from "@/lib/normalizeStation";
@@ -185,8 +184,6 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         }
     })();
 
-    const defaultLocation = userProfile?.preferences?.defaultLocation || "";
-    
     // Distance helper
     const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
         const R = 6371;
@@ -200,62 +197,46 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
     const watchedLocation = form.watch("location") || "";
     const locationSuggestions = useMemo(() => {
         const favs = userProfile?.preferences?.favoriteLocations || [];
-        
-        const customLocs = Array.from(new Set([
-            ...favs,
-            ...(urlLocation ? [urlLocation] : []),
-            ...(defaultLocation ? [defaultLocation] : []),
-            ...LOCATION_suggestions,
-        ])).map(title => ({ 
-            title, 
-            distance: undefined as number | undefined,
-            isFav: favs.includes(title)
-        }));
 
-        const ocmLocs = stations.map(s => {
-            let dist = undefined;
-            if (userLat !== null && userLon !== null && s.lat !== null && s.lon !== null) {
-                dist = getDistance(userLat, userLon, s.lat, s.lon);
+        // Favorites first (with distance if available)
+        const favLocs = favs.map(title => {
+            const station = stations.find(s => s.name === title);
+            let dist: number | undefined = undefined;
+            if (station && userLat !== null && userLon !== null && station.lat !== null && station.lon !== null) {
+                dist = getDistance(userLat, userLon, station.lat, station.lon);
             }
-            return { 
-                title: s.name, 
-                distance: dist, 
-                isFav: favs.includes(s.name)
-            };
+            return { title, distance: dist, isFav: true };
         });
 
-        let all = [...customLocs, ...ocmLocs];
+        // SPKLU nearby (exclude already-listed favorites)
+        const ocmLocs = stations
+            .filter(s => !favs.includes(s.name))
+            .map(s => {
+                let dist: number | undefined = undefined;
+                if (userLat !== null && userLon !== null && s.lat !== null && s.lon !== null) {
+                    dist = getDistance(userLat, userLon, s.lat, s.lon);
+                }
+                return { title: s.name, distance: dist, isFav: false };
+            });
 
+        // Sort SPKLU by distance
+        ocmLocs.sort((a, b) => {
+            if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
+            if (a.distance !== undefined) return -1;
+            if (b.distance !== undefined) return 1;
+            return 0;
+        });
+
+        let all = [...favLocs, ...ocmLocs];
+
+        // Filter by query if user is typing
         if (watchedLocation) {
             const query = watchedLocation.toLowerCase();
             all = all.filter(l => l.title.toLowerCase().includes(query));
         }
 
-        all.sort((a, b) => {
-            // 1. Favorites always at top
-            if (a.isFav && !b.isFav) return -1;
-            if (!a.isFav && b.isFav) return 1;
-            
-            // 2. No distance vs Distance
-            if (a.distance === undefined && b.distance !== undefined) {
-                // If both are favorites, prioritize the one WITH distance so the user sees the km
-                if (a.isFav && b.isFav) return 1;
-                // For non-favorites, put custom generic locations (Home, Office) above OCM lists
-                return -1;
-            }
-            if (a.distance !== undefined && b.distance === undefined) {
-                if (a.isFav && b.isFav) return -1;
-                return 1;
-            }
-            
-            // 3. Both have distance
-            if (a.distance !== undefined && b.distance !== undefined) {
-                return a.distance - b.distance;
-            }
-            return 0;
-        });
-
-        const uniqueTitles = new Set();
+        // Deduplicate
+        const uniqueTitles = new Set<string>();
         const uniqueAll = [];
         for (const item of all) {
             if (!uniqueTitles.has(item.title)) {
@@ -265,7 +246,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         }
 
         return uniqueAll.slice(0, 20);
-    }, [stations, userLat, userLon, watchedLocation, urlLocation, defaultLocation, userProfile]);
+    }, [stations, userLat, userLon, watchedLocation, userProfile]);
 
     const inputStyle = {
         background: "var(--white)",
@@ -454,7 +435,16 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                                             <button
                                                 key={i}
                                                 type="button"
-                                                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                                                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors"
+                                                style={{ color: "var(--ink)" }}
+                                                onMouseEnter={e => {
+                                                    e.currentTarget.style.background = "rgba(255,107,53,0.08)";
+                                                    e.currentTarget.style.color = "var(--volt-orange)";
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.background = "transparent";
+                                                    e.currentTarget.style.color = "var(--ink)";
+                                                }}
                                                 onMouseDown={(e) => {
                                                     e.preventDefault();
                                                     form.setValue("location", loc.title, { shouldValidate: true });

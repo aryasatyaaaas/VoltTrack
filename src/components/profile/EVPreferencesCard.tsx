@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/Card";
-import { Zap, MapPin, Loader2, Star, Plus, X } from "lucide-react";
+import { Zap, Loader2, Star, Plus, X } from "lucide-react";
 import { useStations } from "@/hooks/useStations";
 import { m, AnimatePresence } from "framer-motion";
 import type { UserPreferencesData } from "@/types";
@@ -173,7 +173,6 @@ const CURRENCIES: { code: string; name: string }[] = [
 ];
 
 export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProps) {
-    const [defaultLocation, setDefaultLocation] = useState(preferences.defaultLocation);
     const [currency, setCurrency] = useState(preferences.currency);
     const [favoriteLocations, setFavoriteLocations] = useState<string[]>(preferences.favoriteLocations || []);
 
@@ -255,14 +254,13 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
     const availableDefaults = Array.from(new Set([...favoriteLocations]));
 
     const hasChanges =
-        defaultLocation !== preferences.defaultLocation ||
         currency !== preferences.currency ||
         JSON.stringify(favoriteLocations) !== JSON.stringify(preferences.favoriteLocations || []);
 
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            await onSave({ defaultLocation, currency, favoriteLocations });
+            await onSave({ currency, favoriteLocations });
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
         } finally {
@@ -288,9 +286,6 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
 
     const handleRemoveFavorite = (locToRemove: string) => {
         setFavoriteLocations(prev => prev.filter(l => l !== locToRemove));
-        if (defaultLocation === locToRemove) {
-            setDefaultLocation(""); // Reset if they deleted the active default
-        }
     };
 
     const inputClasses = "w-full rounded-xl border border-[var(--border)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none transition-all";
@@ -308,28 +303,6 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
 
             <div className="space-y-6">
                 <div className="space-y-4">
-                    {/* Default Location */}
-                    <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
-                            <MapPin className="h-3 w-3" /> Default Charging Location
-                        </label>
-                        <select
-                            value={defaultLocation}
-                            onChange={(e) => setDefaultLocation(e.target.value)}
-                            className={inputClasses}
-                            style={{ background: "var(--white)" }}
-                            onFocus={e => e.currentTarget.style.border = "1px solid var(--volt-orange)"}
-                            onBlur={e => e.currentTarget.style.border = "1px solid var(--border)"}
-                        >
-                            {availableDefaults.length === 0 && (
-                                <option value="" disabled>No favorites added yet</option>
-                            )}
-                            {availableDefaults.map((loc) => (
-                                <option key={loc} value={loc}>{loc}</option>
-                            ))}
-                        </select>
-                    </div>
-
                     {/* Currency */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ink-muted)" }}>
@@ -399,7 +372,16 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
                                         <button
                                             key={i}
                                             type="button"
-                                            className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                                            className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors"
+                                            style={{ color: "var(--ink)" }}
+                                            onMouseEnter={e => {
+                                                e.currentTarget.style.background = "rgba(255,107,53,0.08)";
+                                                e.currentTarget.style.color = "var(--volt-orange)";
+                                            }}
+                                            onMouseLeave={e => {
+                                                e.currentTarget.style.background = "transparent";
+                                                e.currentTarget.style.color = "var(--ink)";
+                                            }}
                                             onMouseDown={(e) => {
                                                 e.preventDefault();
                                                 handleAddFavoriteSuggestion(loc.title);

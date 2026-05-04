@@ -122,11 +122,16 @@ function getPeriodLabel(period: Period, offset: number): string {
 
     if (period === "week") {
         const { start } = getPeriodBounds("week", offset);
-        return `Week of ${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+        const mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][start.getMonth()];
+        // Which week of the month (1–4)
+        const weekNum = Math.min(Math.ceil(start.getDate() / 7), 4);
+        return `W${weekNum} of ${mon}`;
     }
     if (period === "month") {
         const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-        return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+        const mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+        const yr = String(d.getFullYear()).slice(-2);
+        return `${mon} '${yr}`;
     }
     return String(now.getFullYear() + offset);
 }
@@ -278,8 +283,10 @@ export default function AnalyticsPage() {
     const [period, setPeriod]           = useState<Period>("month");
     const [offset, setOffset]           = useState(0);   // 0 = current, -1 = prev, etc.
     const [currency, setCurrency]       = useState("IDR");
-    const [showPicker, setShowPicker]   = useState(false);
-    const pickerRef                     = useRef<HTMLDivElement>(null);
+    const [showPicker, setShowPicker]         = useState(false);
+    const [showPeriodDrop, setShowPeriodDrop] = useState(false);
+    const pickerRef                           = useRef<HTMLDivElement>(null);
+    const periodDropRef                       = useRef<HTMLDivElement>(null);
 
     const { data: historyData, isLoading: historyLoading } = useQuery({
         queryKey: ['analytics/stats'],
@@ -321,11 +328,24 @@ export default function AnalyticsPage() {
         return () => document.removeEventListener("mousedown", handler);
     }, [showPicker]);
 
+    // Close period dropdown on outside click
+    useEffect(() => {
+        if (!showPeriodDrop) return;
+        const handler = (e: MouseEvent) => {
+            if (periodDropRef.current && !periodDropRef.current.contains(e.target as Node)) {
+                setShowPeriodDrop(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [showPeriodDrop]);
+
     // Reset offset when period changes
     const handlePeriodChange = (p: Period) => {
         setPeriod(p);
         setOffset(0);
         setShowPicker(false);
+        setShowPeriodDrop(false);
     };
 
     const handlePickerSelect = (o: number) => {
@@ -431,18 +451,12 @@ export default function AnalyticsPage() {
     return (
         <>
             {/* ── TOPBAR ── */}
-            {/*
-                Desktop: [Analytics] .................. [Week Month Year] [This Month ▾]
-                Mobile row 1: [Analytics] ............. [This Month ▾]
-                Mobile row 2: [Week Month Year]
-                Achieved with: flex-wrap on outer div + order via className
-            */}
             <div className="analytics-topbar">
-                {/* Title — always row 1 left */}
+                {/* Title — far left */}
                 <div className="page-title">Analytics</div>
 
-                {/* Period switcher — row 1 on desktop, row 2 on mobile */}
-                <div className="analytics-period-row period-switcher">
+                {/* Period switcher — desktop only pill */}
+                <div className="analytics-period-row period-switcher analytics-period-desktop">
                     {(["week", "month", "year"] as Period[]).map(p => (
                         <button
                             key={p}
@@ -454,7 +468,68 @@ export default function AnalyticsPage() {
                     ))}
                 </div>
 
-                {/* Picker — always row 1 right */}
+                {/* Period dropdown — mobile only */}
+                <div ref={periodDropRef} className="analytics-period-mobile" style={{ position: "relative" }}>
+                    <button
+                        onClick={() => setShowPeriodDrop(v => !v)}
+                        style={{
+                            display: "flex", alignItems: "center", gap: "6px",
+                            height: "32px", padding: "0 12px",
+                            borderRadius: "10px",
+                            border: `1px solid ${showPeriodDrop ? "var(--orange)" : "var(--border)"}`,
+                            background: showPeriodDrop ? "rgba(255,107,53,0.06)" : "var(--white)",
+                            cursor: "pointer",
+                            fontSize: "12px", fontWeight: 600,
+                            color: showPeriodDrop ? "var(--orange)" : "var(--ink)",
+                            whiteSpace: "nowrap",
+                            transition: "all 0.15s",
+                        }}
+                    >
+                        <span>{period.charAt(0).toUpperCase() + period.slice(1)}</span>
+                        <ChevronDown
+                            size={13}
+                            style={{
+                                transition: "transform 0.2s",
+                                transform: showPeriodDrop ? "rotate(180deg)" : "rotate(0deg)",
+                                flexShrink: 0,
+                            }}
+                        />
+                    </button>
+                    {showPeriodDrop && (
+                        <div style={{
+                            position: "absolute", top: "calc(100% + 6px)", left: 0,
+                            background: "var(--white)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "12px",
+                            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+                            zIndex: 50,
+                            minWidth: "100px",
+                            padding: "4px",
+                        }}>
+                            {(["week", "month", "year"] as Period[]).map(p => (
+                                <button
+                                    key={p}
+                                    onClick={() => handlePeriodChange(p)}
+                                    style={{
+                                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                                        width: "100%", padding: "8px 12px",
+                                        borderRadius: "8px", border: "none",
+                                        background: period === p ? "rgba(255,107,53,0.08)" : "transparent",
+                                        color: period === p ? "var(--orange)" : "var(--ink)",
+                                        fontSize: "13px", fontWeight: period === p ? 600 : 400,
+                                        cursor: "pointer", textAlign: "left",
+                                        fontFamily: "inherit",
+                                    }}
+                                >
+                                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                                    {period === p && <Check size={13} style={{ flexShrink: 0 }} />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Picker — far right */}
                 <div ref={pickerRef} className="analytics-picker-wrap">
                     <button
                         id="analytics-period-picker-btn"
@@ -469,10 +544,11 @@ export default function AnalyticsPage() {
                             fontSize: "12px", fontWeight: 600,
                             color: showPicker ? "var(--orange)" : "var(--ink)",
                             whiteSpace: "nowrap",
+                            maxWidth: "140px",
                             transition: "all 0.15s",
                         }}
                     >
-                        {periodLabel}
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{periodLabel}</span>
                         <ChevronDown
                             size={13}
                             style={{

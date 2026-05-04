@@ -34,7 +34,9 @@ export async function PATCH(req: Request) {
                 userId: sessionUser.userId,
                 ...result.data,
             },
-            update: result.data,
+            update: {
+                ...result.data,
+            },
             select: {
                 defaultLocation: true,
                 costPerKwh: true,
@@ -48,6 +50,7 @@ export async function PATCH(req: Request) {
 
         return apiResponse(preferences);
     } catch (error) {
+        console.error("Preferences Update Error:", error);
         return handleApiError(error);
     }
 }

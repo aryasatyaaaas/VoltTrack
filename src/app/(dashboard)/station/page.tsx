@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Search, MapPin, Navigation, Navigation2, Zap, Plug, Map as MapIcon } from "lucide-react";
+import { Search, MapPin, Navigation, Navigation2, Zap, Plug, Map as MapIcon, ExternalLink } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 import { useDebouncedCallback } from 'use-debounce';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -18,13 +18,11 @@ const MapWithNoSSR = dynamic(() => import("@/components/map/StationMap"), {
         </div>
     )
 });
-import { getCurrencySymbol } from "@/lib/utils";
 import { useStations } from "@/hooks/useStations";
 
 // --- Constants ---
 
 const FILTERS = ["All", "AC", "CCS2", "CHAdeMO", "Fast Charging (>50kW)", "Available Now"];
-const RADII = [5, 10, 25, 50, 10000];
 
 export default function StationPage() {
     const router = useRouter();
@@ -35,11 +33,15 @@ export default function StationPage() {
     // Search & Filter state
     const [searchQuery, setSearchQuery] = useState("");
     const [activeFilter, setActiveFilter] = useState("All");
-    const [radius, setRadius] = useState<number>(10);
+    // searchCenter: set when user searches, used to sort list by proximity to search target
+    const [searchCenter, setSearchCenter] = useState<{ lat: number; lon: number } | null>(null);
     
     // Location state
     const [userLat, setUserLat] = useState<number | null>(null);
     const [userLon, setUserLon] = useState<number | null>(null);
+    // Map center — separate from user location so search doesn't move the user marker
+    const [mapLat, setMapLat] = useState<number | null>(null);
+    const [mapLon, setMapLon] = useState<number | null>(null);
     const [locationError, setLocationError] = useState<string | null>(null);
 
     // --- Helpers ---
@@ -64,7 +66,7 @@ export default function StationPage() {
     const error = searchError || (isError ? "Could not fetch stations. Check your connection." : null);
 
     // --- Geolocation ---
-    const requestLocation = () => {
+    const requestLocation = useCallback(() => {
         setLocationError(null);
         if (!navigator.geolocation) {
             setLocationError("Geolocation is not supported by your browser");
@@ -77,13 +79,21 @@ export default function StationPage() {
                 const lon = position.coords.longitude;
                 setUserLat(lat);
                 setUserLon(lon);
+                setMapLat(lat);
+                setMapLon(lon);
+                setSearchCenter(null); // reset search center so list sorts by user location again
             },
             (err) => {
-                setLocationError("Enable location to find nearby stations");
+                // On iOS Safari, permission denied gives code 1
+                if (err.code === 1) {
+                    setLocationError("Location access denied. Please enable it in your browser settings.");
+                } else {
+                    setLocationError("Enable location to find nearby stations");
+                }
             },
-            { enableHighAccuracy: true, timeout: 10000 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
         );
-    };
+    }, []);
 
     // Initial load - try to get location
     useEffect(() => {
@@ -117,8 +127,11 @@ export default function StationPage() {
         );
 
         if (targetStation) {
-            setUserLat(targetStation.lat);
-            setUserLon(targetStation.lon);
+            // Only move the MAP center, not the user location marker
+            setMapLat(targetStation.lat);
+            setMapLon(targetStation.lon);
+            // Sort list by proximity to search target
+            setSearchCenter({ lat: targetStation.lat, lon: targetStation.lon });
             setVisibleCount(5);
             setActiveFilter("All");
         } else {
@@ -127,23 +140,15 @@ export default function StationPage() {
         }
     }, 400);
 
-    // Handle Radius Change
-    const handleRadiusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newRadius = parseInt(e.target.value);
-        setRadius(newRadius);
-    };
-
-    // --- Filtering Logic (Single-Pass) ---
+    // --- Filtering & Sorting Logic ---
     const listStations = useMemo(() => {
         if (!stations?.length) return [];
-        return stations.filter(s => {
-            // Distance filter
-            if (radius && radius !== 10000 && s.distanceKm > radius) return false;
 
-            // Type/Status filter
+        // 1. Filter by type/status only (no radius filter)
+        const filtered = stations.filter(s => {
             if (activeFilter === "All") return true;
             if (activeFilter === "Available Now") return s.isOperational === true;
-            
+
             const hasAC = s.connectors.some(c => {
                 const t = c.type.toUpperCase();
                 return (t.includes("AC") || t.includes("TYPE 2")) && !t.includes("CCS");
@@ -160,7 +165,27 @@ export default function StationPage() {
                 default: return true;
             }
         });
-    }, [stations, activeFilter, radius]);
+
+        // 2. Sort: if user searched, sort by distance from search center; otherwise by distance from user
+        if (searchCenter) {
+            return [...filtered].sort((a, b) => {
+                const da = getDistance(searchCenter.lat, searchCenter.lon, a.lat ?? 0, a.lon ?? 0);
+                const db = getDistance(searchCenter.lat, searchCenter.lon, b.lat ?? 0, b.lon ?? 0);
+                return da - db;
+            });
+        }
+
+        // Default: already sorted by distanceKm from API (user location)
+        return filtered;
+    }, [stations, activeFilter, searchCenter]);
+
+    const handleNavigate = (station: NormalizedStation) => {
+        // Use coordinates for accuracy; fall back to address text
+        const url = station.lat && station.lon
+            ? `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lon}`
+            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(station.address || station.name)}`;
+        window.open(url, "_blank", "noopener,noreferrer");
+    };
 
     const handleLogCharge = (station: NormalizedStation) => {
         const name = encodeURIComponent(station.name);
@@ -185,7 +210,7 @@ export default function StationPage() {
                         <MapPin className="h-6 w-6 text-orange-500" />
                         Station
                     </h1>
-                    <p className="text-sm text-[var(--ink-muted)]">Find nearby SPKLU in Indonesia</p>
+                    <p className="text-sm text-[var(--ink-muted)]">Find nearby charging station around you</p>
                 </div>
 
                 <div className="flex flex-col gap-3 sm:flex-row">
@@ -214,7 +239,7 @@ export default function StationPage() {
                 </div>
 
                 {/* --- FILTER BAR --- */}
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
                     <div className="flex flex-1 items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
                         {FILTERS.map(f => (
                             <button
@@ -229,17 +254,6 @@ export default function StationPage() {
                                 {f}
                             </button>
                         ))}
-                    </div>
-                    <div className="flex-shrink-0">
-                        <select
-                            value={radius}
-                            onChange={handleRadiusChange}
-                            className="rounded-full border border-[var(--border)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--ink)] shadow-sm outline-none focus:border-orange-500"
-                        >
-                            {RADII.map(r => (
-                                <option key={r} value={r}>{r === 10000 ? "All" : `${r} km Radius`}</option>
-                            ))}
-                        </select>
                     </div>
                 </div>
             </div>
@@ -289,7 +303,7 @@ export default function StationPage() {
                                 <MapPin className="h-8 w-8 text-orange-400" />
                             </div>
                             <h3 className="mb-2 text-base font-bold text-[var(--ink)]">No stations found nearby</h3>
-                            <p className="text-sm text-[var(--ink-muted)]">Try increasing the search radius or changing your filters.</p>
+                            <p className="text-sm text-[var(--ink-muted)]">Try changing your filters or search for a different location.</p>
                         </div>
                     ) : (
                         <AnimatePresence>
@@ -331,7 +345,10 @@ export default function StationPage() {
                                                 return (
                                                     <span key={idx} className="flex items-center gap-1 rounded-full border border-gray-100 bg-gray-50 px-2 py-1 text-[10px] font-semibold text-[var(--ink)]">
                                                         <Plug className="h-3 w-3 text-gray-400" />
-                                                        {formatConnectionType(c.type)}{currentLabel} 
+                                                        {formatConnectionType(c.type)}{currentLabel}
+                                                        {c.quantity && c.quantity > 1 && (
+                                                            <span className="text-gray-400">x{c.quantity}</span>
+                                                        )}
                                                         {c.powerKw ? <span className="text-orange-500 ml-1">{c.powerKw}kW</span> : null}
                                                     </span>
                                                 );
@@ -349,12 +366,22 @@ export default function StationPage() {
                                                 </p>
                                             </div>
                                             
-                                            <button
-                                                onClick={() => handleLogCharge(station)}
-                                                className="flex-shrink-0 rounded-xl border border-orange-500 bg-white px-3 py-2 text-xs font-bold text-orange-500 transition-colors hover:bg-orange-50"
-                                            >
-                                                Log Charge Here
-                                            </button>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <button
+                                                    onClick={() => handleNavigate(station)}
+                                                    title="Open in Google Maps"
+                                                    className="flex-shrink-0 flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-xs font-bold text-[var(--ink-muted)] transition-colors hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50"
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5" />
+                                                    Navigate
+                                                </button>
+                                                <button
+                                                    onClick={() => handleLogCharge(station)}
+                                                    className="flex-shrink-0 rounded-xl border border-orange-500 bg-white px-3 py-2 text-xs font-bold text-orange-500 transition-colors hover:bg-orange-50"
+                                                >
+                                                    Log Charge Here
+                                                </button>
+                                            </div>
                                         </div>
                                     </m.div>
                                 );
@@ -375,7 +402,7 @@ export default function StationPage() {
                 {/* RIGHT: Dynamic Map */}
                 <div className="hidden lg:flex w-[60%] min-h-[400px] rounded-3xl border border-[var(--border)] bg-[#FDFBF7] shadow-sm relative overflow-hidden z-0">
                     <ErrorBoundary fallback={<div className="flex h-full w-full items-center justify-center p-6 text-center text-sm text-gray-500">Peta tidak dapat dimuat.</div>}>
-                        <MapWithNoSSR userLat={userLat} userLon={userLon} stations={listStations} />
+                        <MapWithNoSSR userLat={userLat} userLon={userLon} mapLat={mapLat ?? userLat} mapLon={mapLon ?? userLon} stations={listStations} />
                     </ErrorBoundary>
                 </div>
 

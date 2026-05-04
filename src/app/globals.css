@@ -502,7 +502,7 @@ html[data-theme="dark"] {
 
 /* ── ANALYTICS HEADER ── */
 .page-title { font-size: 20px; font-weight: 700; color: var(--ink); letter-spacing: -0.3px; }
-.period-switcher { display: flex; background: var(--white); border: 0.5px solid var(--border-md); border-radius: 100px; padding: 3px; gap: 2px; }
+.period-switcher { display: flex; width: fit-content; background: var(--white); border: 0.5px solid var(--border-md); border-radius: 100px; padding: 3px; gap: 2px; }
 .period-btn {
   background: none; border: none; font-family: inherit;
   font-size: 12px; font-weight: 500; color: var(--muted);
@@ -583,44 +583,38 @@ html[data-theme="dark"] {
 .charger-pct { font-size: 13px; font-weight: 700; color: var(--ink); }
 .charger-sessions { font-size: 11px; color: var(--muted); }
 
-/* ── ANALYTICS TOPBAR (responsive layout) ── */
-/*
-  Desktop: [Analytics] .............. [Week Month Year] [This Month ▾]
-  Mobile:  [Analytics] ......................... [This Month ▾]
-           [Week Month Year]
-*/
+/* ── ANALYTICS TOPBAR (single row, all screen sizes) ── */
 .analytics-topbar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
+  width: 100%;
 }
-/* Title stays far left, row 1 */
+/* Title grows to push switcher+picker to the right */
 .analytics-topbar .page-title {
-  flex: 1 1 auto; /* grows to push other items right */
+  flex: 1 1 auto;
+  min-width: 0;
 }
-/* Period switcher — sits between title and picker on desktop */
+/* Period switcher — compact, no grow */
 .analytics-period-row {
-  flex-shrink: 0;
-  order: 2; /* desktop: middle */
+  flex: 0 0 auto;
 }
-/* Picker — always far right */
+/* Picker — compact, no grow */
 .analytics-picker-wrap {
   position: relative;
-  flex-shrink: 0;
-  order: 3; /* desktop: last */
+  flex: 0 0 auto;
 }
 
+/* Mobile: period switcher compact — same style as picker button */
+/* Desktop: show pill, hide dropdown */
+.analytics-period-desktop { display: flex; }
+.analytics-period-mobile  { display: none; }
+
 @media (max-width: 640px) {
-  /* Row 1: [Analytics (flex:1)] [Picker (order:1)] */
-  .analytics-period-row {
-    order: 3;         /* pushes to row 2 */
-    flex: 0 0 auto;
-  }
-  .analytics-picker-wrap {
-    order: 2;         /* stays row 1, right side */
-    margin-left: 0;   /* title's flex:1 already pushes it right */
-  }
+  /* Hide pill, show dropdown */
+  .analytics-period-desktop { display: none !important; }
+  .analytics-period-mobile  { display: block; }
 }
 
 /* ── RESPONSIVE ── */
@@ -630,10 +624,11 @@ html[data-theme="dark"] {
 }
 
 @media (max-width: 640px) {
-  /* Analytics topbar: stack title on top, controls below */
+  /* Topbar: keep it row in mobile, justify-between */
   .topbar {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 10px;
   }
   /* The controls wrapper (period + nav) should wrap nicely */
@@ -661,7 +656,6 @@ html[data-theme="dark"] {
   .chart-legend { flex-wrap: wrap; gap: 8px; }
 
   /* Period switcher: allow shrink */
-  .period-switcher { flex-shrink: 0; }
   .period-btn { padding: 5px 10px; font-size: 11px; }
 
   /* Charger donut smaller on mobile */

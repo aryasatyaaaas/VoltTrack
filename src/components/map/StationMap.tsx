@@ -75,15 +75,19 @@ import type { NormalizedStation } from '@/lib/normalizeStation';
 
 export default function StationMap({ 
     userLat, 
-    userLon, 
+    userLon,
+    mapLat,
+    mapLon,
     stations 
 }: { 
     userLat: number | null, 
-    userLon: number | null, 
+    userLon: number | null,
+    mapLat: number | null,
+    mapLon: number | null,
     stations: NormalizedStation[] 
 }) {
-    // Default center to Jakarta if no user location
-    const center: [number, number] = [userLat ?? -6.2088, userLon ?? 106.8456];
+    // Map center follows search; user marker stays at actual location
+    const center: [number, number] = [mapLat ?? -6.2088, mapLon ?? 106.8456];
 
     const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 
@@ -188,10 +192,10 @@ export default function StationMap({
                                             else if (t.includes("DC") && !t.includes(" DC")) type += " DC";
                                             
                                             const kw = c.powerKw ? `${c.powerKw}kW` : "";
-                                            const qty = c.quantity ? `(x${c.quantity})` : "";
+                                            const qty = c.quantity ? `x${c.quantity}` : "";
                                             return (
                                                 <div key={idx} className="flex justify-between items-center bg-[var(--surface-2)] rounded px-2 py-1 text-[11px] font-semibold text-[var(--ink)]">
-                                                    <span>{type} {qty}</span>
+                                                    <span>{type}{qty ? <span className="text-gray-400 ml-1">{qty}</span> : null}</span>
                                                     {kw && <span className="text-orange-500">{kw}</span>}
                                                 </div>
                                             );

@@ -1,14 +1,15 @@
 "use client";
 
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrencyDynamic } from "@/lib/utils";
 
 interface HighlightCardsProps {
     weeklyKwh: number;
     weeklyCost: number;
     topLocationMonth: string;
+    currency?: string;
 }
 
-export function HighlightCards({ weeklyKwh, weeklyCost, topLocationMonth }: HighlightCardsProps) {
+export function HighlightCards({ weeklyKwh, weeklyCost, topLocationMonth, currency = "IDR" }: HighlightCardsProps) {
     return (
         <div className="metrics">
             <div className="metric-card">
@@ -29,7 +30,7 @@ export function HighlightCards({ weeklyKwh, weeklyCost, topLocationMonth }: High
                     </svg>
                 </div>
                 <div className="metric-val text-lg">
-                    {formatCurrency(Math.round(weeklyCost))}
+                    {formatCurrencyDynamic(Math.round(weeklyCost), currency)}
                 </div>
                 <div className="metric-label">Total Cost — this week</div>
             </div>

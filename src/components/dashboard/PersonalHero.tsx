@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrencyDynamic } from "@/lib/utils";
 
 interface PersonalHeroProps {
     kwh: number;
@@ -9,6 +9,7 @@ interface PersonalHeroProps {
     trendPercentage: number;
     sessionsCount: number;
     sparkData: number[];
+    currency?: string;
 }
 
 function useCountUp(target: number, duration = 1.4) {
@@ -30,7 +31,7 @@ function useCountUp(target: number, duration = 1.4) {
     return display;
 }
 
-export function PersonalHero({ kwh, cost, trendPercentage, sessionsCount, sparkData }: PersonalHeroProps) {
+export function PersonalHero({ kwh, cost, trendPercentage, sessionsCount, sparkData, currency = "IDR" }: PersonalHeroProps) {
     const animKwh = useCountUp(kwh);
     
     // Process sparkData dynamically
@@ -48,7 +49,7 @@ export function PersonalHero({ kwh, cost, trendPercentage, sessionsCount, sparkD
                 </div>
                 <div className="hero-meta">
                     <div className="hero-cost">
-                        Total cost: <strong>{formatCurrency(cost)}</strong>
+                        Total cost: <strong>{formatCurrencyDynamic(cost, currency)}</strong>
                     </div>
                     {trendPercentage !== 0 && (
                         <div className="hero-change">

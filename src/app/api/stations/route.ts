@@ -29,7 +29,6 @@ export async function GET(request: Request) {
     try {
         const ocmParams = new URLSearchParams({
             output: 'json',
-            countrycode: 'ID',
             latitude: lat,
             longitude: lon,
             distance: distance,

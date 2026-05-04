@@ -3,10 +3,12 @@
 import { Zap, MapPin, Clock } from "lucide-react";
 import { m } from "framer-motion";
 import type { HistorySession } from "@/types";
+import { formatCurrencyDynamic } from "@/lib/utils";
 
 interface HistorySessionCardProps {
     session: HistorySession;
     onClick: () => void;
+    currency?: string;
 }
 
 function formatDuration(minutes: number | null): string {
@@ -24,7 +26,7 @@ function formatTime(dateStr: string): string {
     });
 }
 
-export function HistorySessionCard({ session, onClick }: HistorySessionCardProps) {
+export function HistorySessionCard({ session, onClick, currency = "IDR" }: HistorySessionCardProps) {
     return (
         <m.button
             onClick={onClick}
@@ -72,7 +74,7 @@ export function HistorySessionCard({ session, onClick }: HistorySessionCardProps
                             <>
                                 <span className="text-sm" style={{ color: "var(--ink-4)" }}>·</span>
                                 <span className="text-sm font-bold" style={{ color: "var(--volt-blue)" }}>
-                                    Rp {session.cost.toLocaleString("id-ID")}
+                                    {formatCurrencyDynamic(session.cost, currency)}
                                 </span>
                             </>
                         )}
