@@ -62,6 +62,19 @@ export async function middleware(req: NextRequest) {
 
     let response = NextResponse.next();
 
+    // Ensure CSRF token exists
+    let csrfCookie = req.cookies.get(CSRF_COOKIE_NAME)?.value;
+    if (!csrfCookie) {
+        csrfCookie = crypto.randomUUID().replace(/-/g, "");
+        const isSecure = process.env.REQUIRE_SECURE_COOKIES === "true";
+        response.cookies.set(CSRF_COOKIE_NAME, csrfCookie, {
+            httpOnly: false, // Must be readable by client for CsrfProvider
+            secure: isSecure,
+            sameSite: "lax",
+            path: "/",
+        });
+    }
+
     // 3. Handle Route Protection
     if (PROTECTED_PATHS.some((p) => pathname.startsWith(p))) {
         if (!isAuthenticated) {
