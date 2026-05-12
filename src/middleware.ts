@@ -118,7 +118,7 @@ export async function middleware(req: NextRequest) {
     response.headers.set("X-Frame-Options", "DENY");
     response.headers.set("X-Content-Type-Options", "nosniff");
     response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-    response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    response.headers.set("Permissions-Policy", "camera=(), microphone=()"); // Removed geolocation restriction
     response.headers.set("X-XSS-Protection", "1; mode=block");
 
     if (process.env.NODE_ENV === "production") {
@@ -129,11 +129,11 @@ export async function middleware(req: NextRequest) {
     const isDev = process.env.NODE_ENV !== "production";
     const cspHeader = `
         default-src 'self';
-        script-src 'self' ${isDev ? "'unsafe-inline' 'unsafe-eval'" : "'unsafe-inline'"};
+        script-src 'self' https://static.cloudflareinsights.com ${isDev ? "'unsafe-inline' 'unsafe-eval'" : "'unsafe-inline'"};
         style-src 'self' 'unsafe-inline';
-        img-src 'self' blob: data:;
+        img-src 'self' blob: data: https:;
         font-src 'self' data:;
-        connect-src 'self';
+        connect-src 'self' https: wss:;
         frame-ancestors 'none';
         base-uri 'self';
         form-action 'self';

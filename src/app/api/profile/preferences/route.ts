@@ -28,25 +28,46 @@ export async function PATCH(req: Request) {
             throw result.error;
         }
 
-        const preferences = await prisma.userPreferences.upsert({
-            where: { userId: sessionUser.userId },
-            create: {
-                userId: sessionUser.userId,
-                ...result.data,
-            },
-            update: {
-                ...result.data,
-            },
-            select: {
-                defaultLocation: true,
-                costPerKwh: true,
-                currency: true,
-                rememberInput: true,
-                autoFillLocation: true,
-                smartInsights: true,
-                favoriteLocations: true,
-            },
+        let preferences = await prisma.userPreferences.findUnique({
+            where: { userId: sessionUser.userId }
         });
+
+        if (preferences) {
+            preferences = await prisma.userPreferences.update({
+                where: { userId: sessionUser.userId },
+                data: {
+                    ...result.data,
+                    ...(result.data.favoriteLocations !== undefined && {
+                        favoriteLocations: { set: result.data.favoriteLocations }
+                    })
+                },
+                select: {
+                    defaultLocation: true,
+                    costPerKwh: true,
+                    currency: true,
+                    rememberInput: true,
+                    autoFillLocation: true,
+                    smartInsights: true,
+                    favoriteLocations: true,
+                },
+            });
+        } else {
+            preferences = await prisma.userPreferences.create({
+                data: {
+                    userId: sessionUser.userId,
+                    ...result.data,
+                },
+                select: {
+                    defaultLocation: true,
+                    costPerKwh: true,
+                    currency: true,
+                    rememberInput: true,
+                    autoFillLocation: true,
+                    smartInsights: true,
+                    favoriteLocations: true,
+                },
+            });
+        }
 
         return apiResponse(preferences);
     } catch (error) {
