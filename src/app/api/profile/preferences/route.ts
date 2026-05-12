@@ -29,7 +29,16 @@ export async function PATCH(req: Request) {
         }
 
         let preferences = await prisma.userPreferences.findUnique({
-            where: { userId: sessionUser.userId }
+            where: { userId: sessionUser.userId },
+            select: {
+                defaultLocation: true,
+                costPerKwh: true,
+                currency: true,
+                rememberInput: true,
+                autoFillLocation: true,
+                smartInsights: true,
+                favoriteLocations: true,
+            }
         });
 
         if (preferences) {
