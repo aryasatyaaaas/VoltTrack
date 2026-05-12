@@ -67,16 +67,7 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
         loadLocations();
     }, []);
 
-    // Geolocation
-    useEffect(() => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                pos => { setUserLat(pos.coords.latitude); setUserLon(pos.coords.longitude); },
-                () => {},
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
-        }
-    }, []);
+    // Location fetch removed on mount to avoid iOS Safari auto-blocking geolocation without user interaction.
 
     const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
         const R = 6371;

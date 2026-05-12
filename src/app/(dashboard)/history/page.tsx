@@ -314,7 +314,7 @@ export default function HistoryPage() {
                                 disabled={loadingMore}
                                 className="flex items-center gap-2 rounded-2xl px-8 py-3 text-sm font-bold transition disabled:opacity-50"
                                 style={{
-                                    background: "white",
+                                    background: "var(--white)",
                                     border: "1px solid var(--border)",
                                     color: "var(--ink)",
                                     boxShadow: "0 2px 4px rgba(0,0,0,0.02)"

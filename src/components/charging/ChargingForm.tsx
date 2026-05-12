@@ -99,19 +99,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         }
     }, [watchedKwh, userProfile, isAutoCalculating, form]);
 
-    // Fetch Location
-    useEffect(() => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                pos => {
-                    setUserLat(pos.coords.latitude);
-                    setUserLon(pos.coords.longitude);
-                },
-                () => {},
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
-        }
-    }, []);
+    // Location fetch removed on mount to avoid iOS Safari auto-blocking geolocation without user interaction.
 
     const handleCostManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.valueAsNumber;

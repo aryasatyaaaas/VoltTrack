@@ -95,11 +95,9 @@ export default function StationPage() {
         );
     }, []);
 
-    // Initial load - try to get location
-    useEffect(() => {
-        requestLocation();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // Removed automatic requestLocation on mount.
+    // iOS Safari automatically denies geolocation if not triggered by a user action (like a button click).
+    // Users will now use the "Use My Location" button to trigger the prompt.
 
     // Haversine distance calculator
     const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
