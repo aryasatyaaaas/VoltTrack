@@ -13,7 +13,8 @@ function createPrismaClient() {
         port: parseInt(url.port, 10),
         user: url.username,
         password: url.password,
-        database: url.pathname.slice(1),
+        // pathname is "/volttrack" or "/volttrack?schema=public" — strip query string
+        database: url.pathname.slice(1).split("?")[0],
     });
     const adapter = new PrismaPg(pool);
     return new PrismaClient({ adapter });
