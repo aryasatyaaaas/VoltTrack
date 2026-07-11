@@ -624,18 +624,26 @@ html[data-theme="dark"] {
 }
 
 @media (max-width: 640px) {
-  /* Topbar: keep it row in mobile, justify-between */
+  /* Topbar: keep it row in mobile, justify-between — actions pinned right */
   .topbar {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-  }
-  /* The controls wrapper (period + nav) should wrap nicely */
-  .topbar > div:last-child {
-    flex-wrap: wrap;
     width: 100%;
+  }
+  /* Greeting grows, pushes actions to the right */
+  .greeting {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* Actions: compact, no stretch, always right-aligned */
+  .topbar-actions {
+    flex: 0 0 auto;
+    display: flex;
     gap: 6px;
+    align-items: center;
+    flex-wrap: nowrap;
   }
 
   /* KPI cards: full-width on very small screens */
