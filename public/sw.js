@@ -7,7 +7,7 @@
  *  - Network-first: navigation requests (HTML pages — always get fresh render)
  */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const STATIC_CACHE = `volttrack-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `volttrack-runtime-${CACHE_VERSION}`;
 
