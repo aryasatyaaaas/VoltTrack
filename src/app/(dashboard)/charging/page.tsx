@@ -13,7 +13,7 @@ export default function ChargingPage() {
                 transition={{ duration: 0.4 }}
             >
                 <Suspense fallback={<div className="flex justify-center p-8 text-[var(--ink-muted)]">Loading form...</div>}>
-                    <ChargingForm onSuccess={() => {}} />
+                    <ChargingForm />
                 </Suspense>
             </m.div>
         </div>

@@ -3,10 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/Card";
 import { Zap, Loader2, Star, Plus, X } from "lucide-react";
-import { useStations } from "@/hooks/useStations";
 import { m, AnimatePresence } from "framer-motion";
 import type { UserPreferencesData } from "@/types";
-import type { NormalizedStation } from "@/lib/normalizeStation";
 
 interface EVPreferencesCardProps {
     preferences: UserPreferencesData;
@@ -187,56 +185,13 @@ export function EVPreferencesCard({ preferences, onSave }: EVPreferencesCardProp
     const [userLon, setUserLon] = useState<number | null>(null);
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
-    const { data: stationsData } = useStations({
-        lat: userLat,
-        lon: userLon,
-        distance: userLat && userLon ? 10000 : undefined,
-        maxresults: 1000
-    });
-    const stations: NormalizedStation[] = stationsData || [];
-
-    // Location fetch removed on mount to avoid iOS Safari auto-blocking geolocation without user interaction.
-
-    const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-    };
+    // Location fetch removed — external station API no longer used.
 
     const locationSuggestions = useMemo(() => {
         const query = newLocationInput.toLowerCase();
-        
-        let all = stations.map(s => {
-            let dist = undefined;
-            if (userLat !== null && userLon !== null && s.lat !== null && s.lon !== null) {
-                dist = getDistance(userLat, userLon, s.lat, s.lon);
-            }
-            return { title: s.name, distance: dist };
-        });
-        
-        if (query) {
-            all = all.filter(l => l.title.toLowerCase().includes(query));
-        }
-
-        all.sort((a, b) => {
-            if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
-            return 0;
-        });
-
-        const uniqueTitles = new Set();
-        const uniqueAll = [];
-        for (const item of all) {
-            if (!uniqueTitles.has(item.title) && !favoriteLocations.includes(item.title)) {
-                uniqueTitles.add(item.title);
-                uniqueAll.push(item);
-            }
-        }
-
-        return uniqueAll.slice(0, 20);
-    }, [stations, userLat, userLon, newLocationInput, favoriteLocations]);
+        // No external station data — just allow custom input (no dropdown suggestions)
+        return [] as { title: string; distance: number | undefined }[];
+    }, [newLocationInput]);
 
     // Use only favoriteLocations for the defaultLocation dropdown
     const availableDefaults = Array.from(new Set([...favoriteLocations]));

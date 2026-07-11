@@ -4,25 +4,13 @@ import { HighlightCards } from "@/components/dashboard/HighlightCards";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const data = await getDashboardData();
 
-  // Fetch user currency preference
-  let currency = "IDR";
-  try {
-    const sessionUser = await getSessionUser();
-    const user = await prisma.user.findUnique({
-      where: { id: sessionUser.userId },
-      select: { preferences: true },
-    });
-    const prefs = user?.preferences as { currency?: string } | null;
-    if (prefs?.currency) currency = prefs.currency;
-  } catch { }
+  const currency = data.currency;
 
   // Weekly stats: sum of this week's data from weeklyTrend last entry (current week)
   const thisWeek = data.weeklyTrend[data.weeklyTrend.length - 1] ?? { kwh: 0, cost: 0 };

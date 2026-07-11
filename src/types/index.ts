@@ -1,19 +1,12 @@
 export interface DashboardData {
     greeting: string;
+    currency: string;
     hero: {
         kwh: number;
         trendPercentage: number;
-        insightText: string;
         cost: number;
         sessionsThisMonth: number;
-        lastMonthCost: number;
-        lastMonthSessions: number;
-        totalSessions: number;
-        totalKwh: number;
-        totalCost: number;
-        avgCostPerSession: number;
     };
-    stories: StoryItem[];
     weeklyTrend: { week: string; kwh: number; cost: number }[];
     timeline: TimelineItem[];
     energyBreakdown: {
@@ -22,20 +15,9 @@ export interface DashboardData {
         costByLocation: { name: string; cost: number; percent: number }[];
         topLocationThisMonth: string | null;
     };
-    predictions: {
-        nextChargingDay: string | null;
-        avgGapDays: number | null;
-        weeklyProjectedKwh: number;
-        weeklyProjectedCost: number;
-    };
 }
 
-export interface StoryItem {
-    id: string;
-    icon: "zap" | "trending-up" | "trending-down" | "dollar-sign" | "calendar";
-    text: string;
-    type: "neutral" | "positive" | "negative";
-}
+
 
 export interface TimelineItem {
     id: string;
@@ -103,12 +85,4 @@ export interface HistoryResponse {
         total: number;
         hasMore: boolean;
     };
-}
-export interface RecentSession {
-    id: string;
-    energyKwh: number;
-    cost: number | null;
-    location: string;
-    chargerType: string | null;
-    sessionDate: string | Date;
 }

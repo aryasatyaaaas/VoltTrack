@@ -17,6 +17,13 @@ interface HistoryFiltersProps {
     onChange: (filters: HistoryFiltersState) => void;
 }
 
+// Stable object reference — defined outside to avoid recreating on every render
+const pillInputStyle: React.CSSProperties = {
+    background: "var(--white)",
+    border: "1px solid var(--border)",
+    color: "var(--ink)",
+};
+
 export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
     const [expanded, setExpanded] = useState(false);
     const [locations, setLocations] = useState<string[]>([]);
@@ -55,12 +62,6 @@ export function HistoryFilters({ filters, onChange }: HistoryFiltersProps) {
         setLocalSearch("");
         onChange({ from: "", to: "", location: "all", chargerType: "all", search: "" });
     };
-
-    const pillInputStyle = {
-        background: "var(--white)",
-        border: "1px solid var(--border)",
-        color: "var(--ink)",
-    } as React.CSSProperties;
 
     return (
         <div className="space-y-3">

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getPercentageChange, formatDate } from "@/lib/utils";
 import { getSessionUser } from "@/lib/session";
-import type { DashboardData, StoryItem, TimelineItem } from "@/types";
+import type { DashboardData, TimelineItem } from "@/types";
 
 // ─── Week boundary helpers ───────────────────────────────
 function getWeekStart(offset: number = 0): Date {
@@ -53,14 +53,14 @@ function getMonthEnd(offset: number = 0): Date {
     return start;
 }
 
-// ─── Hero metrics (3 parallel aggregates) ────────────────
+// ─── Hero metrics (2 parallel aggregates) ────────────────
 async function getHeroData(userId: string) {
     const thisMonthStart = getMonthStart(0);
     const thisMonthEnd = getMonthEnd(0);
     const lastMonthStart = getMonthStart(-1);
     const lastMonthEnd = getMonthEnd(-1);
 
-    const [thisMonth, lastMonth, allTime] = await Promise.all([
+    const [thisMonth, lastMonth] = await Promise.all([
         prisma.chargingSession.aggregate({
             _sum: { energyKwh: true, cost: true },
             _count: { id: true },
@@ -71,39 +71,17 @@ async function getHeroData(userId: string) {
             _count: { id: true },
             where: { userId, sessionDate: { gte: lastMonthStart, lt: lastMonthEnd } },
         }),
-        prisma.chargingSession.aggregate({
-            _sum: { energyKwh: true, cost: true },
-            _count: { id: true },
-            _avg: { energyKwh: true, cost: true },
-            where: { userId },
-        }),
     ]);
 
     const currentKwh = Math.round((thisMonth._sum.energyKwh ?? 0) * 10) / 10;
     const lastKwh = Math.round((lastMonth._sum.energyKwh ?? 0) * 10) / 10;
     const trendPercentage = getPercentageChange(currentKwh, lastKwh);
 
-    let insightText = "";
-    if (trendPercentage > 20) {
-        insightText = `That's ${trendPercentage}% higher than last month.`;
-    } else if (trendPercentage < -20) {
-        insightText = `You used ${Math.abs(trendPercentage)}% less energy than last month.`;
-    } else {
-        insightText = "Your usage is consistent with last month.";
-    }
-
     return {
         kwh: currentKwh,
         trendPercentage,
-        insightText,
         cost: thisMonth._sum.cost ?? 0,
         sessionsThisMonth: thisMonth._count.id,
-        lastMonthCost: lastMonth._sum.cost ?? 0,
-        lastMonthSessions: lastMonth._count.id,
-        totalSessions: allTime._count.id,
-        totalKwh: Math.round((allTime._sum.energyKwh ?? 0) * 10) / 10,
-        totalCost: Math.round(allTime._sum.cost ?? 0),
-        avgCostPerSession: Math.round(allTime._avg.cost ?? 0),
     };
 }
 
@@ -218,154 +196,7 @@ async function getWeeklyCostTrend(userId: string) {
     });
 }
 
-// ─── Predictions ─────────────────────────────────────────
-async function getPredictions(userId: string) {
-    const twoWeeksAgo = new Date();
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
-    const recentSessions = await prisma.chargingSession.findMany({
-        where: { userId, sessionDate: { gte: twoWeeksAgo } },
-        orderBy: { sessionDate: "desc" },
-        select: { sessionDate: true, energyKwh: true, cost: true },
-    });
-
-    let avgGapDays: number | null = null;
-    if (recentSessions.length >= 2) {
-        const gaps: number[] = [];
-        for (let i = 0; i < recentSessions.length - 1; i++) {
-            const d1 = new Date(recentSessions[i].sessionDate).getTime();
-            const d2 = new Date(recentSessions[i + 1].sessionDate).getTime();
-            gaps.push((d1 - d2) / (1000 * 60 * 60 * 24));
-        }
-        avgGapDays = Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length);
-        if (avgGapDays < 1) avgGapDays = 1;
-    }
-
-    const lastSession = recentSessions[0];
-    let nextChargingDate: Date | null = null;
-    if (lastSession && avgGapDays !== null) {
-        nextChargingDate = new Date(lastSession.sessionDate);
-        nextChargingDate.setDate(nextChargingDate.getDate() + avgGapDays);
-        if (nextChargingDate < new Date()) {
-            nextChargingDate = new Date();
-            nextChargingDate.setDate(nextChargingDate.getDate() + 1);
-        }
-    }
-
-    const avgKwhPerSession = recentSessions.length > 0
-        ? recentSessions.reduce((sum, s) => sum + s.energyKwh, 0) / recentSessions.length
-        : 0;
-
-    const sessionsPerWeek = (avgGapDays !== null && avgGapDays > 0) ? 7 / avgGapDays : 0;
-
-    const weeklyProjectedKwh = Math.round(avgKwhPerSession * sessionsPerWeek * 10) / 10;
-    const avgCostPerSession = recentSessions.length > 0
-        ? recentSessions.reduce((sum, s) => sum + (s.cost ?? 0), 0) / recentSessions.length
-        : 0;
-    const weeklyProjectedCost = Math.round(avgCostPerSession * sessionsPerWeek);
-
-    return {
-        nextChargingDay: nextChargingDate
-            ? nextChargingDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
-            : null,
-        avgGapDays,
-        weeklyProjectedKwh,
-        weeklyProjectedCost,
-    };
-}
-
-// ─── Smart insights ──────────────────────────────────────
-function getSmartInsights(
-    heroData: Awaited<ReturnType<typeof getHeroData>>,
-    breakdown: Awaited<ReturnType<typeof getEnergyBreakdown>>
-): StoryItem[] {
-    const stories: StoryItem[] = [];
-
-    if (heroData.cost > 0) {
-        stories.push({
-            id: "cost",
-            icon: "dollar-sign",
-            text: `You've spent Rp ${heroData.cost.toLocaleString("id-ID")} on charging this week.`,
-            type: "neutral",
-        });
-    }
-
-    if (heroData.trendPercentage > 15) {
-        stories.push({
-            id: "trend-up",
-            icon: "trending-up",
-            text: `Energy usage is ${heroData.trendPercentage}% higher than last week — consider lighter charging.`,
-            type: "negative",
-        });
-    } else if (heroData.trendPercentage < -15) {
-        stories.push({
-            id: "trend-down",
-            icon: "trending-down",
-            text: `Great efficiency! You're saving ${Math.abs(heroData.trendPercentage)}% energy vs last week.`,
-            type: "positive",
-        });
-    }
-
-    if (breakdown.locationBreakdown.length > 0) {
-        const top = breakdown.locationBreakdown[0];
-        stories.push({
-            id: "top-loc",
-            icon: "zap",
-            text: `${top.name} is your most visited charging spot (${top.count} session${top.count > 1 ? "s" : ""}).`,
-            type: "neutral",
-        });
-    }
-
-    const homeCost = breakdown.costByLocation.find((l) => l.name === "Home");
-    const publicCost = breakdown.costByLocation.find((l) => l.name === "Public Station");
-    if (homeCost && publicCost) {
-        if (homeCost.cost < publicCost.cost) {
-            stories.push({
-                id: "home-vs-public",
-                icon: "dollar-sign",
-                text: `Charging at home saves you more — Rp ${(publicCost.cost - homeCost.cost).toLocaleString("id-ID")} cheaper overall.`,
-                type: "positive",
-            });
-        } else {
-            stories.push({
-                id: "home-vs-public",
-                icon: "dollar-sign",
-                text: `Public stations cost Rp ${(homeCost.cost - publicCost.cost).toLocaleString("id-ID")} less than home charging overall.`,
-                type: "neutral",
-            });
-        }
-    }
-
-    stories.push({
-        id: "sessions-week",
-        icon: "zap",
-        text: heroData.sessionsThisMonth > 0
-            ? `You've completed ${heroData.sessionsThisMonth} session${heroData.sessionsThisMonth > 1 ? "s" : ""} this month.`
-            : "No charging sessions this month yet — time to plug in?",
-        type: heroData.sessionsThisMonth > 0 ? "neutral" : "negative",
-    });
-
-    if (heroData.totalSessions > 5) {
-        stories.push({
-            id: "all-time",
-            icon: "calendar",
-            text: `Lifetime: ${heroData.totalSessions} sessions, ${heroData.totalKwh} kWh, Rp ${heroData.totalCost.toLocaleString("id-ID")} total.`,
-            type: "neutral",
-        });
-    }
-
-    if (breakdown.chargerBreakdown.length > 1) {
-        const top = breakdown.chargerBreakdown[0];
-        stories.push({
-            id: "charger-pref",
-            icon: "zap",
-            text: `You prefer ${top.name} chargers — ${top.percent}% of your total energy.`,
-            type: "neutral",
-        });
-    }
-
-    return stories;
-}
 
 // ─── Timeline ────────────────────────────────────────────
 async function getTimeline(userId: string): Promise<TimelineItem[]> {
@@ -392,31 +223,27 @@ async function getTimeline(userId: string): Promise<TimelineItem[]> {
 export async function getDashboardData(): Promise<DashboardData> {
     const sessionUser = await getSessionUser();
 
-    // Fetch user name from DB (only needed here for greeting)
+    // Fetch user name + currency preference from DB (single query)
+    console.log("[DEBUG] sessionUser:", sessionUser);
     const user = await prisma.user.findUnique({
-        where: { id: sessionUser.userId },
-        select: { name: true },
+        where: { id: sessionUser?.userId },
+        include: { preferences: true },
     });
 
     // Phase 1: parallelized independent data fetches
-    const [hero, breakdown, timeline, weeklyTrend, predictions] = await Promise.all([
+    const [hero, breakdown, timeline, weeklyTrend] = await Promise.all([
         getHeroData(sessionUser.userId),
         getEnergyBreakdown(sessionUser.userId),
         getTimeline(sessionUser.userId),
         getWeeklyCostTrend(sessionUser.userId),
-        getPredictions(sessionUser.userId),
     ]);
-
-    // Phase 2: CPU-only work (synchronous, no await)
-    const stories = getSmartInsights(hero, breakdown);
 
     return {
         greeting: getGreeting(user?.name ?? "there"),
+        currency: user?.preferences?.currency ?? "IDR",
         hero,
-        stories,
         weeklyTrend,
         timeline,
         energyBreakdown: breakdown,
-        predictions,
     };
 }

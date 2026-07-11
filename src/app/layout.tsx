@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { CsrfProvider } from "@/components/auth/CsrfProvider";
 import { Providers } from "./providers";
+import { PWARegister } from "@/components/pwa/PWARegister";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -18,10 +19,26 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500"],
 });
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FF6B35" },
+    { media: "(prefers-color-scheme: dark)", color: "#1A1A2E" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover", // For iPhone notch/Dynamic Island support
+};
+
 export const metadata: Metadata = {
   title: "VoltTrack — EV Charging Tracker",
   description:
     "Track your electric vehicle charging sessions, energy usage, and costs with VoltTrack.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "VoltTrack",
+  },
 };
 
 /** Inline script injected in <head> — runs before any paint to prevent flash */
@@ -53,6 +70,7 @@ export default function RootLayout({
             {children}
           </Providers>
         </CsrfProvider>
+        <PWARegister />
       </body>
     </html>
   );

@@ -26,16 +26,7 @@ const navItems = [
             </svg>
         ),
     },
-    {
-        href: "/station",
-        label: "Station",
-        icon: (
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 8.5C17 12.64 10 18.5 10 18.5C10 18.5 3 12.64 3 8.5C3 4.634 6.134 1.5 10 1.5C13.866 1.5 17 4.634 17 8.5Z" />
-                <circle cx="10" cy="8.5" r="2.5" />
-            </svg>
-        ),
-    },
+
     {
         href: "/history",
         label: "History",

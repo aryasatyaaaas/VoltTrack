@@ -15,6 +15,8 @@ import type {
     HistoryFiltersState,
     HistoryResponse,
 } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { useProfile } from "@/hooks/useProfile";
 
 const initialFilters: HistoryFiltersState = {
     from: "",
@@ -39,8 +41,6 @@ function groupByDate(sessions: HistorySession[]): { label: string; sessions: His
     return Array.from(groups.entries()).map(([label, sessions]) => ({ label, sessions }));
 }
 
-import { useQueryClient } from "@tanstack/react-query";
-
 export default function HistoryPage() {
     const queryClient = useQueryClient();
     const [sessions, setSessions] = useState<HistorySession[]>([]);
@@ -50,7 +50,6 @@ export default function HistoryPage() {
         totalSessions: 0,
         avgEnergy: 0,
     });
-    const [insights, setInsights] = useState<string[]>([]);
     const [filters, setFilters] = useState<HistoryFiltersState>(initialFilters);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
@@ -58,8 +57,6 @@ export default function HistoryPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [selectedSession, setSelectedSession] = useState<HistorySession | null>(null);
     const [showExport, setShowExport] = useState(false);
-    const [userCurrency, setUserCurrency] = useState("IDR");
-    const [userName, setUserName] = useState("User");
     const [totalCount, setTotalCount] = useState(0);
 
     const fetchHistory = useCallback(
@@ -92,7 +89,6 @@ export default function HistoryPage() {
                 } else {
                     setSessions(data.sessions);
                     setSummary(data.summary);
-                    setInsights(data.insights);
                 }
                 setHasMore(data.pagination.hasMore);
                 setTotalCount(data.pagination.total);
@@ -111,17 +107,9 @@ export default function HistoryPage() {
         fetchHistory(1);
     }, [fetchHistory]);
 
-    useEffect(() => {
-        fetch("/api/profile")
-            .then(r => r.ok ? r.json() : null)
-            .then(data => {
-                if (data) {
-                    setUserCurrency(data.preferences?.currency ?? "IDR");
-                    setUserName(data.name ?? "User");
-                }
-            })
-            .catch(() => {});
-    }, []);
+    const { data: profileData } = useProfile();
+    const userCurrency = profileData?.preferences?.currency ?? "IDR";
+    const userName = profileData?.name ?? "User";
 
     /** Fetch ALL sessions matching current filters — used by ExportModal */
     const fetchAllForExport = useCallback(async (): Promise<HistorySession[]> => {

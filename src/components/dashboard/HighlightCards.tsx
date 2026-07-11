@@ -43,7 +43,7 @@ export function HighlightCards({ weeklyKwh, weeklyCost, topLocationMonth, curren
                     </svg>
                 </div>
                 <div className="metric-val place">{topLocationMonth || "—"}</div>
-                <div className="metric-label">Favorite Station — this month</div>
+                <div className="metric-label">Favorite Location — this month</div>
             </div>
         </div>
     );

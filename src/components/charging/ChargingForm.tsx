@@ -7,9 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Zap, MapPin, Calendar, Clock, Loader2, Plug, Star } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
-import type { UserProfile } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useStations } from "@/hooks/useStations";
 
 const formSchema = z.object({
     kwh: z.number().positive("Energy must be greater than 0"),
@@ -24,7 +22,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const CHARGER_TYPES = ["AC", "CCS2", "CHAdeMO"];
 
-import type { NormalizedStation } from "@/lib/normalizeStation";
+import { useProfile } from "@/hooks/useProfile";
 
 interface ChargingFormProps {
     onSuccess?: () => void;
@@ -33,25 +31,13 @@ interface ChargingFormProps {
 export function ChargingForm({ onSuccess }: ChargingFormProps) {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [isAutoCalculating, setIsAutoCalculating] = useState(true);
     
     const queryClient = useQueryClient();
 
-    // Combobox / API states
-    const [userLat, setUserLat] = useState<number | null>(null);
-    const [userLon, setUserLon] = useState<number | null>(null);
+    // Combobox state
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-
-    const { data: stationsData } = useStations({
-        lat: userLat,
-        lon: userLon,
-        distance: userLat && userLon ? 10000 : undefined,
-        maxresults: 1000
-    });
-    const stations: NormalizedStation[] = stationsData || [];
 
     const urlLocation = searchParams.get("location") || "";
     const urlType = searchParams.get("type") || "AC";
@@ -71,23 +57,9 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
     const watchedKwh = form.watch("kwh");
     const watchedChargerType = form.watch("chargerType");
 
-    useEffect(() => {
-        const loadProfile = async () => {
-            try {
-                const res = await fetch("/api/profile");
-                if (res.ok) {
-                    const data = await res.json();
-                    setUserProfile(data);
-                    if (data.preferences?.defaultLocation) {
-                        if (!form.getValues("location")) {
-                            form.setValue("location", data.preferences.defaultLocation);
-                        }
-                    }
-                }
-            } catch (err) { }
-        };
-        loadProfile();
-    }, [form]);
+    // Profile: cached via React Query (shared across all components, no duplicate fetches)
+    const { data: profileData } = useProfile();
+    const userProfile = profileData ?? null;
 
     useEffect(() => {
         if (!isAutoCalculating) return;
@@ -148,14 +120,11 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
     });
 
     const onSubmit = async (data: FormValues) => {
-        setIsSubmitting(true);
         setSuccessMessage(null);
         try {
             await submitMutation.mutateAsync(data);
         } catch (error) {
             console.error(error);
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -172,69 +141,19 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
         }
     })();
 
-    // Distance helper
-    const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-    };
-
     const watchedLocation = form.watch("location") || "";
     const locationSuggestions = useMemo(() => {
         const favs = userProfile?.preferences?.favoriteLocations || [];
-
-        // Favorites first (with distance if available)
-        const favLocs = favs.map(title => {
-            const station = stations.find(s => s.name === title);
-            let dist: number | undefined = undefined;
-            if (station && userLat !== null && userLon !== null && station.lat !== null && station.lon !== null) {
-                dist = getDistance(userLat, userLon, station.lat, station.lon);
-            }
-            return { title, distance: dist, isFav: true };
-        });
-
-        // SPKLU nearby (exclude already-listed favorites)
-        const ocmLocs = stations
-            .filter(s => !favs.includes(s.name))
-            .map(s => {
-                let dist: number | undefined = undefined;
-                if (userLat !== null && userLon !== null && s.lat !== null && s.lon !== null) {
-                    dist = getDistance(userLat, userLon, s.lat, s.lon);
-                }
-                return { title: s.name, distance: dist, isFav: false };
-            });
-
-        // Sort SPKLU by distance
-        ocmLocs.sort((a, b) => {
-            if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
-            if (a.distance !== undefined) return -1;
-            if (b.distance !== undefined) return 1;
-            return 0;
-        });
-
-        let all = [...favLocs, ...ocmLocs];
+        let suggestions = favs.map(title => ({ title, isFav: true }));
 
         // Filter by query if user is typing
         if (watchedLocation) {
             const query = watchedLocation.toLowerCase();
-            all = all.filter(l => l.title.toLowerCase().includes(query));
+            suggestions = suggestions.filter(l => l.title.toLowerCase().includes(query));
         }
 
-        // Deduplicate
-        const uniqueTitles = new Set<string>();
-        const uniqueAll = [];
-        for (const item of all) {
-            if (!uniqueTitles.has(item.title)) {
-                uniqueTitles.add(item.title);
-                uniqueAll.push(item);
-            }
-        }
-
-        return uniqueAll.slice(0, 20);
-    }, [stations, userLat, userLon, watchedLocation, userProfile]);
+        return suggestions.slice(0, 20);
+    }, [watchedLocation, userProfile]);
 
     const inputStyle = {
         background: "var(--white)",
@@ -443,11 +362,6 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                                                     {loc.isFav && <Star className="h-3 w-3 flex-shrink-0 text-orange-500 fill-orange-500" />}
                                                     <span className="truncate">{loc.title}</span>
                                                 </span>
-                                                {loc.distance !== undefined && (
-                                                    <span className="flex-shrink-0 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
-                                                        {loc.distance.toFixed(1)} km
-                                                    </span>
-                                                )}
                                             </button>
                                         ))}
                                     </m.div>
@@ -540,7 +454,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                     {/* ── Save Button ── */}
                     <m.button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={submitMutation.isPending}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.97 }}
                         className="group relative mt-2 flex h-14 w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl font-bold text-base tracking-wide text-white transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
@@ -551,7 +465,7 @@ export function ChargingForm({ onSuccess }: ChargingFormProps) {
                     >
                         {/* Shimmer overlay */}
                         <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                        {isSubmitting ? (
+                        {submitMutation.isPending ? (
                             <>
                                 <Loader2 className="h-5 w-5 animate-spin" />
                                 Saving...

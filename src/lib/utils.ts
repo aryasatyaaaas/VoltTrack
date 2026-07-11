@@ -6,20 +6,22 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-/** Format kWh with unit */
-export function formatKwh(value: number): string {
-    return `${value.toFixed(1)} kWh`;
+/**
+ * Haversine distance in km between two lat/lon pairs.
+ * Extracted from ChargingForm + SessionDetailModal (was duplicated).
+ */
+export function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-/** Format IDR currency (legacy helper) */
-export function formatCurrency(value: number): string {
-    return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(value);
-}
+
 
 /**
  * Returns a short prefix for a currency code.
@@ -61,7 +63,4 @@ export function formatDate(date: Date): string {
     }).format(date);
 }
 
-/** Get day name abbreviation */
-export function getDayName(date: Date): string {
-    return new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(date);
-}
+

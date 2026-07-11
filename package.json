@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:webpack": "next dev --turbopack=false",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -14,6 +15,7 @@
     "@prisma/client": "^7.4.1",
     "@tanstack/react-query": "^5.100.8",
     "@tanstack/react-query-devtools": "^5.100.8",
+    "@types/pg": "^8.20.0",
     "bcryptjs": "^3.0.3",
     "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
@@ -25,6 +27,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
+    "pg": "^8.22.0",
     "prisma": "^7.4.1",
     "react": "19.2.3",
     "react-chartjs-2": "^5.3.1",

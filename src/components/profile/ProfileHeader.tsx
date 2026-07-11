@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Card } from "@/components/ui/Card";
 import { Pencil, Check, X, Loader2, Camera, AlertCircle } from "lucide-react";
 import type { UserProfile } from "@/types";
+import Image from "next/image";
 
 interface ProfileHeaderProps {
     profile: UserProfile;
@@ -26,7 +27,7 @@ function getInitials(name: string): string {
  */
 function compressImage(file: File): Promise<File> {
     return new Promise((resolve, reject) => {
-        const img = new Image();
+        const img = new window.Image();
         const reader = new FileReader();
 
         reader.onload = (e) => {
@@ -195,10 +196,13 @@ export function ProfileHeader({ profile, onUpdate, onAvatarChange }: ProfileHead
                             }}
                         >
                             {avatarUrl ? (
-                                <img
+                                <Image
                                     src={avatarUrl}
                                     alt={profile.name}
-                                    className="h-full w-full object-cover"
+                                    fill
+                                    className="object-cover"
+                                    sizes="96px"
+                                    priority
                                 />
                             ) : (
                                 getInitials(profile.name)

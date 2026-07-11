@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ChevronDown, Check } from "lucide-react";
 import type { HistorySession } from "@/types";
 import { getCurrencySymbol } from "@/lib/utils";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useProfile } from "@/hooks/useProfile";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 const MixedChart = dynamic(() => import('@/components/analytics/LazyCharts').then(mod => mod.MixedChart), {
     ssr: false,
@@ -277,12 +279,10 @@ function buildPickerOptions(
 
 // ── Component ──────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
-    const queryClient = useQueryClient();
     const [allSessions, setAllSessions] = useState<HistorySession[]>([]);
     const [loading, setLoading]         = useState(true);
     const [period, setPeriod]           = useState<Period>("month");
-    const [offset, setOffset]           = useState(0);   // 0 = current, -1 = prev, etc.
-    const [currency, setCurrency]       = useState("IDR");
+    const [offset, setOffset]           = useState(0);
     const [showPicker, setShowPicker]         = useState(false);
     const [showPeriodDrop, setShowPeriodDrop] = useState(false);
     const pickerRef                           = useRef<HTMLDivElement>(null);
@@ -307,38 +307,13 @@ export default function AnalyticsPage() {
         }
     }, [historyData, historyLoading]);
 
-    useEffect(() => {
-        fetch("/api/profile")
-            .then(r => r.ok ? r.json() : null)
-            .then(data => {
-                if (data?.preferences?.currency) setCurrency(data.preferences.currency);
-            })
-            .catch(() => {});
-    }, []);
+    // ── Profile / currency ────────────────────────────────────────────────
+    const { data: profileData } = useProfile();
+    const currency = profileData?.preferences?.currency ?? "IDR";
 
-    // Close picker on outside click
-    useEffect(() => {
-        if (!showPicker) return;
-        const handler = (e: MouseEvent) => {
-            if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-                setShowPicker(false);
-            }
-        };
-        document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, [showPicker]);
-
-    // Close period dropdown on outside click
-    useEffect(() => {
-        if (!showPeriodDrop) return;
-        const handler = (e: MouseEvent) => {
-            if (periodDropRef.current && !periodDropRef.current.contains(e.target as Node)) {
-                setShowPeriodDrop(false);
-            }
-        };
-        document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, [showPeriodDrop]);
+    // ── Outside-click to close dropdowns ──────────────────────────────────
+    useOutsideClick(pickerRef,    showPicker,    useCallback(() => setShowPicker(false),    []));
+    useOutsideClick(periodDropRef, showPeriodDrop, useCallback(() => setShowPeriodDrop(false), []));
 
     // Reset offset when period changes
     const handlePeriodChange = (p: Period) => {
@@ -353,71 +328,71 @@ export default function AnalyticsPage() {
         setShowPicker(false);
     };
 
-    // ── Derived data ──────────────────────────────────────────────────────
-    const { start: curStart, end: curEnd }   = getPeriodBounds(period, offset);
-    const { start: prevStart, end: prevEnd } = getPeriodBounds(period, offset - 1);
+    // ── Derived data (memoized — won't recompute on dropdown toggle) ──────
+    const current = useMemo(
+        () => { const b = getPeriodBounds(period, offset);     return filterByBounds(allSessions, b.start, b.end); },
+        [allSessions, period, offset]
+    );
+    const previous = useMemo(
+        () => { const b = getPeriodBounds(period, offset - 1); return filterByBounds(allSessions, b.start, b.end); },
+        [allSessions, period, offset]
+    );
 
-    const current  = filterByBounds(allSessions, curStart, curEnd);
-    const previous = filterByBounds(allSessions, prevStart, prevEnd);
+    const labels      = useMemo(() => buildLabels(period), [period]);
+    const periodLabel = useMemo(() => getPeriodLabel(period, offset), [period, offset]);
 
-    const labels   = buildLabels(period);
-    const { energy, cost, costRaw } = aggregateByLabel(current, labels, period);
-    const periodLabel = getPeriodLabel(period, offset);
-    const kpi         = computeKpi(current, previous, periodLabel);
-    const heatmap     = buildHeatmap(allSessions);
+    const { energy, cost, costRaw } = useMemo(
+        () => aggregateByLabel(current, labels, period),
+        [current, labels, period]
+    );
 
-    const currencySymbol = getCurrencySymbol(currency);
-    const costLabel = currencySymbol.length === 1
-        ? `Cost (${currencySymbol}K)`
-        : `Cost (K)`;
-    // Format cost for tooltip
-    const fmtCostTooltip = (raw: number) => {
+    const kpi     = useMemo(() => computeKpi(current, previous, periodLabel), [current, previous, periodLabel]);
+    const heatmap = useMemo(() => buildHeatmap(allSessions), [allSessions]);
+
+    const currencySymbol = useMemo(() => getCurrencySymbol(currency), [currency]);
+    const costLabel      = useMemo(
+        () => currencySymbol.length === 1 ? `Cost (${currencySymbol}K)` : `Cost (K)`,
+        [currencySymbol]
+    );
+
+    const fmtCostTooltip = useCallback((raw: number) => {
         const sym = getCurrencySymbol(currency);
         const formatted = raw.toLocaleString("en-US");
         return sym.length === 1 ? `${sym}${formatted}` : `${sym} ${formatted}`;
-    };
+    }, [currency]);
 
-    const locationColors = buildLocationColors(allSessions);
+    const locationColors = useMemo(() => buildLocationColors(allSessions), [allSessions]);
 
-    const locationCount: Record<string, number> = {};
-    current.forEach(s => {
-        locationCount[s.location] = (locationCount[s.location] ?? 0) + 1;
-    });
-    const total = Object.values(locationCount).reduce((a, b) => a + b, 0) || 1;
-    const chargerRows = Object.entries(locationCount)
-        .map(([name, count]) => ({
-            name,
-            pct: Math.round((count / total) * 100),
-            sessions: count,
-            color: locationColors[name] ?? "#888780",
-        }))
-        .sort((a, b) => b.sessions - a.sessions);
+    const chargerRows = useMemo(() => {
+        const locationCount: Record<string, number> = {};
+        current.forEach(s => { locationCount[s.location] = (locationCount[s.location] ?? 0) + 1; });
+        const total = Object.values(locationCount).reduce((a, b) => a + b, 0) || 1;
+        return Object.entries(locationCount)
+            .map(([name, count]) => ({
+                name,
+                pct: Math.round((count / total) * 100),
+                sessions: count,
+                color: locationColors[name] ?? "#888780",
+            }))
+            .sort((a, b) => b.sessions - a.sessions);
+    }, [current, locationColors]);
 
-    const topLocations = chargerRows.slice(0, 4).map(c => c.name);
-    const scatterDatasets = topLocations.map(loc => ({
-        label: loc,
-        data: allSessions
-            .filter(s => s.location === loc && s.durationMinutes != null && s.energyKwh > 0)
-            .map(s => ({ x: s.durationMinutes!, y: s.energyKwh })),
-        backgroundColor: (locationColors[loc] ?? "#888780") + "CC",
-        pointRadius: 6,
-        pointHoverRadius: 8,
-    }));
+    const avgDuration = useMemo(() => {
+        const durationMap: Record<string, number[]> = {};
+        labels.forEach(l => { durationMap[l] = []; });
+        current.forEach(s => {
+            if (s.durationMinutes == null) return;
+            const key = getLabelKey(isoToDate(s.sessionDate), period);
+            if (durationMap[key]) durationMap[key].push(s.durationMinutes);
+        });
+        return labels.map(l => {
+            const vals = durationMap[l];
+            if (!vals || vals.length === 0) return 0;
+            return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+        });
+    }, [current, labels, period]);
 
-    const durationMap: Record<string, number[]> = {};
-    labels.forEach(l => { durationMap[l] = []; });
-    current.forEach(s => {
-        if (s.durationMinutes == null) return;
-        const key = getLabelKey(isoToDate(s.sessionDate), period);
-        if (durationMap[key]) durationMap[key].push(s.durationMinutes);
-    });
-    const avgDuration = labels.map(l => {
-        const vals = durationMap[l];
-        if (!vals || vals.length === 0) return 0;
-        return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
-    });
-
-    const trendData = {
+    const trendData = useMemo(() => ({
         labels,
         datasets: [
             {
@@ -446,7 +421,7 @@ export default function AnalyticsPage() {
                 yAxisID: "y2",
             },
         ],
-    };
+    }), [labels, energy, cost, costLabel]);
 
     return (
         <>

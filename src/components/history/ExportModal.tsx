@@ -28,9 +28,6 @@ export function ExportModal({ isOpen, onClose, fetchAll, totalCount, currency = 
         ? [from, to].filter(Boolean).join(" → ") || "Custom"
         : "Filtered view";
 
-    // Estimated count shown in preview (actual fetch happens on export)
-    const previewCount = totalCount;
-
     const handleExport = async () => {
         setIsExporting(true);
         try {
@@ -121,7 +118,7 @@ export function ExportModal({ isOpen, onClose, fetchAll, totalCount, currency = 
                 >
                     <Filter className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--volt-orange)" }} />
                     <span>
-                        Will export <strong style={{ color: "var(--ink)" }}>{previewCount} sessions</strong> matching active filters
+                        Will export <strong style={{ color: "var(--ink)" }}>{totalCount} sessions</strong> matching active filters
                     </span>
                 </div>
 
@@ -176,14 +173,14 @@ export function ExportModal({ isOpen, onClose, fetchAll, totalCount, currency = 
                 <div
                     className="mb-5 rounded-2xl p-3 text-center text-sm"
                     style={{
-                        background: previewCount > 0 ? "rgba(6,214,160,0.08)" : "rgba(255,107,53,0.06)",
-                        border: `1px solid ${previewCount > 0 ? "rgba(6,214,160,0.2)" : "rgba(255,107,53,0.15)"}`,
+                        background: totalCount > 0 ? "rgba(6,214,160,0.08)" : "rgba(255,107,53,0.06)",
+                        border: `1px solid ${totalCount > 0 ? "rgba(6,214,160,0.2)" : "rgba(255,107,53,0.15)"}`,
                     }}
                 >
-                    {previewCount > 0 ? (
+                    {totalCount > 0 ? (
                         <span style={{ color: "var(--ink)" }}>
                             📄 PDF will include{" "}
-                            <strong style={{ color: "#06D6A0" }}>{previewCount} session{previewCount !== 1 ? "s" : ""}</strong>
+                            <strong style={{ color: "#06D6A0" }}>{totalCount} session{totalCount !== 1 ? "s" : ""}</strong>
                             {useCustomRange && (from || to) && " (date filter applied)"}
                         </span>
                     ) : (
@@ -206,7 +203,7 @@ export function ExportModal({ isOpen, onClose, fetchAll, totalCount, currency = 
                     </button>
                     <button
                         onClick={handleExport}
-                        disabled={isExporting || previewCount === 0}
+                        disabled={isExporting || totalCount === 0}
                         className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition disabled:opacity-50"
                         style={{
                             background: "linear-gradient(135deg, #FF6B35 0%, #FFD93D 100%)",

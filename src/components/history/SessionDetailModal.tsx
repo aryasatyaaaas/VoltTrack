@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { X, Zap, MapPin, Clock, Plug, Calendar, Pencil, Trash2, Loader2, Check, Star } from "lucide-react";
 import type { HistorySession } from "@/types";
 import { m, AnimatePresence } from "framer-motion";
-import { useStations } from "@/hooks/useStations";
-import type { NormalizedStation } from "@/lib/normalizeStation";
 import { formatCurrencyDynamic } from "@/lib/utils";
 
 interface SessionDetailModalProps {
@@ -22,6 +20,13 @@ function formatDuration(minutes: number | null): string {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+// Defined outside component — object reference stable across renders
+const inputStyle: React.CSSProperties = {
+    border: "1px solid var(--border)",
+    background: "var(--white)",
+    color: "var(--ink)",
+};
+
 export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: SessionDetailModalProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -34,16 +39,6 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
 
     // Location combobox state
     const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-    const [userLat, setUserLat] = useState<number | null>(null);
-    const [userLon, setUserLon] = useState<number | null>(null);
-
-    const { data: stationsData } = useStations({
-        lat: userLat,
-        lon: userLon,
-        distance: userLat && userLon ? 10000 : undefined,
-        maxresults: 1000,
-    });
-    const stations: NormalizedStation[] = stationsData || [];
 
     // Edit fields
     const [energyKwh, setEnergyKwh] = useState(0);
@@ -67,53 +62,15 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
         loadLocations();
     }, []);
 
-    // Location fetch removed on mount to avoid iOS Safari auto-blocking geolocation without user interaction.
-
-    const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-    };
-
-    // Location suggestions: favorites first, then nearby SPKLU
-    const locationSuggestions = (() => {
-        const favLocs = favoriteLocations.map(title => {
-            const station = stations.find(s => s.name === title);
-            let dist: number | undefined;
-            if (station && userLat !== null && userLon !== null && station.lat !== null && station.lon !== null) {
-                dist = getDistance(userLat, userLon, station.lat, station.lon);
-            }
-            return { title, distance: dist, isFav: true };
-        });
-
-        const ocmLocs = stations
-            .filter(s => !favoriteLocations.includes(s.name))
-            .map(s => {
-                let dist: number | undefined;
-                if (userLat !== null && userLon !== null && s.lat !== null && s.lon !== null) {
-                    dist = getDistance(userLat, userLon, s.lat, s.lon);
-                }
-                return { title: s.name, distance: dist, isFav: false };
-            })
-            .sort((a, b) => {
-                if (a.distance !== undefined && b.distance !== undefined) return a.distance - b.distance;
-                if (a.distance !== undefined) return -1;
-                if (b.distance !== undefined) return 1;
-                return 0;
-            });
-
-        let all = [...favLocs, ...ocmLocs];
+    const locationSuggestions = useMemo(() => {
+        let suggestions = favoriteLocations.map(title => ({ title, isFav: true, distance: undefined as number | undefined }));
         if (location) {
             const q = location.toLowerCase();
-            all = all.filter(l => l.title.toLowerCase().includes(q));
+            suggestions = suggestions.filter(l => l.title.toLowerCase().includes(q));
         }
-
         const seen = new Set<string>();
-        return all.filter(l => { if (seen.has(l.title)) return false; seen.add(l.title); return true; }).slice(0, 20);
-    })();
+        return suggestions.filter(l => { if (seen.has(l.title)) return false; seen.add(l.title); return true; }).slice(0, 20);
+    }, [favoriteLocations, location]);
 
     useEffect(() => {
         if (session) {
@@ -170,13 +127,6 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
     };
 
     const date = new Date(session.sessionDate);
-
-    // Helper classes
-    const inputStyle = {
-        border: "1px solid var(--border)",
-        background: "var(--white)",
-        color: "var(--ink)",
-    } as React.CSSProperties;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -238,7 +188,7 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
                                         type="text"
                                         value={location}
                                         onChange={(e) => setLocation(e.target.value)}
-                                        placeholder="Search SPKLU or type custom..."
+                                        placeholder="Search favorites or type custom..."
                                         className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all"
                                         style={inputStyle}
                                         autoComplete="off"
@@ -283,11 +233,6 @@ export function SessionDetailModal({ session, onClose, onUpdate, onDelete }: Ses
                                                             {loc.isFav && <Star className="h-3 w-3 flex-shrink-0 text-orange-500 fill-orange-500" />}
                                                             <span className="truncate">{loc.title}</span>
                                                         </span>
-                                                        {loc.distance !== undefined && (
-                                                            <span className="flex-shrink-0 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
-                                                                {loc.distance.toFixed(1)} km
-                                                            </span>
-                                                        )}
                                                     </button>
                                                 ))}
                                             </m.div>

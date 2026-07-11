@@ -134,6 +134,7 @@ export async function middleware(req: NextRequest) {
         img-src 'self' blob: data: https:;
         font-src 'self' data:;
         connect-src 'self' https: wss:;
+        worker-src 'self';
         frame-ancestors 'none';
         base-uri 'self';
         form-action 'self';
