@@ -1,4 +1,4 @@
-# ⚡ VoltTrack — EV Charging Tracker
+# VoltTrack — EV Charging Tracker
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
@@ -12,29 +12,29 @@
 
 ---
 
-## 📖 Deskripsi
+## Deskripsi
 
 **VoltTrack** adalah aplikasi web berbasis **Progressive Web App (PWA)** yang membantu pemilik kendaraan listrik (EV) untuk mencatat, memantau, dan menganalisis sesi pengisian daya kendaraan mereka. Dengan VoltTrack, pengguna dapat melacak konsumsi energi (kWh), biaya pengisian, durasi sesi, serta mendapatkan insight melalui visualisasi data yang interaktif.
 
 ---
 
-## ✨ Fitur Utama
+## Fitur Utama
 
-- 🔐 **Autentikasi Aman** — Register & login dengan JWT-based authentication dan proteksi CSRF token
-- ⚡ **Pencatatan Sesi Pengisian** — Catat sesi charging dengan detail: energi (kWh), biaya, lokasi, tipe charger, durasi, dan level baterai
-- 📊 **Dashboard Interaktif** — Ringkasan statistik penggunaan bulan ini, tren mingguan, dan aktivitas terbaru
-- 📈 **Analytics Mendalam** — Grafik dan visualisasi data konsumsi energi & biaya per periode
-- 🗺️ **Peta Stasiun** — Peta interaktif berbasis Leaflet untuk melihat lokasi stasiun pengisian
-- 📜 **Riwayat Sesi** — Halaman history lengkap dengan filter dan pagination
-- 👤 **Manajemen Profil** — Pengaturan preferensi pengguna: nama kendaraan EV, lokasi default, harga per kWh, mata uang, dan lokasi favorit
-- 📱 **PWA Support** — Dapat diinstall sebagai aplikasi di smartphone (Android & iOS)
-- 🌗 **Dark / Light Mode** — Toggle tema tanpa flash, disimpan di localStorage
-- 🐳 **Docker Ready** — Siap di-deploy menggunakan Docker dan Docker Compose
-- 📄 **Export PDF** — Ekspor data sesi ke format PDF menggunakan jsPDF
+- **Autentikasi Aman** — Register & login dengan JWT-based authentication dan proteksi CSRF token
+- **Pencatatan Sesi Pengisian** — Catat sesi charging dengan detail: energi (kWh), biaya, lokasi, tipe charger, durasi, dan level baterai
+- **Dashboard Interaktif** — Ringkasan statistik penggunaan bulan ini, tren mingguan, dan aktivitas terbaru
+- **Analytics Mendalam** — Grafik dan visualisasi data konsumsi energi & biaya per periode
+- **Peta Stasiun** — Peta interaktif berbasis Leaflet untuk melihat lokasi stasiun pengisian
+- **Riwayat Sesi** — Halaman history lengkap dengan filter dan pagination
+- **Manajemen Profil** — Pengaturan preferensi pengguna: nama kendaraan EV, lokasi default, harga per kWh, mata uang, dan lokasi favorit
+- **PWA Support** — Dapat diinstall sebagai aplikasi di smartphone (Android & iOS)
+- **Dark / Light Mode** — Toggle tema tanpa flash, disimpan di localStorage
+- **Docker Ready** — Siap di-deploy menggunakan Docker dan Docker Compose
+- **Export PDF** — Ekspor data sesi ke format PDF menggunakan jsPDF
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Kategori         | Teknologi                                               |
 |------------------|---------------------------------------------------------|
@@ -54,7 +54,7 @@
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 Pastikan tools berikut sudah terinstall sebelum menjalankan project:
 
@@ -68,7 +68,7 @@ Pastikan tools berikut sudah terinstall sebelum menjalankan project:
 
 ---
 
-## 🚀 Instalasi
+## Instalasi
 
 ### Opsi A — Manual (Local Development)
 
@@ -122,7 +122,7 @@ Aplikasi akan berjalan di: **http://localhost:3000**
 
 ---
 
-## 🖥️ Cara Pakai
+## Cara Pakai
 
 | Halaman      | Route          | Deskripsi                                        |
 |--------------|----------------|--------------------------------------------------|
@@ -137,7 +137,7 @@ Aplikasi akan berjalan di: **http://localhost:3000**
 
 ---
 
-## ⚙️ Konfigurasi
+## Konfigurasi
 
 Buat file `.env.local` di root project dengan variabel berikut:
 
@@ -149,11 +149,11 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5433/volttrack"
 JWT_SECRET="your-super-secret-jwt-key-here"
 ```
 
-> **⚠️ Penting:** Jangan pernah commit file `.env.local` ke repository. Pastikan sudah terdaftar di `.gitignore`.
+> **Penting:** Jangan pernah commit file `.env.local` ke repository. Pastikan sudah terdaftar di `.gitignore`.
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Method   | Endpoint                    | Deskripsi                          | Auth |
 |----------|-----------------------------|------------------------------------|------|
@@ -173,7 +173,7 @@ JWT_SECRET="your-super-secret-jwt-key-here"
 
 ---
 
-## 📁 Struktur Folder
+## Struktur Folder
 
 ```
 ev_track/
@@ -232,7 +232,7 @@ ev_track/
 
 ---
 
-## 🐳 Deployment dengan Docker
+## Deployment dengan Docker
 
 ```bash
 # Build dan jalankan semua container
@@ -250,7 +250,7 @@ docker compose down -v
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Kontribusi sangat disambut! Berikut cara berkontribusi:
 
@@ -264,7 +264,7 @@ Gunakan [Conventional Commits](https://www.conventionalcommits.org/) untuk pesan
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] Notifikasi pengingat pengisian (push notification)
 - [ ] Integrasi dengan OCPP / API stasiun publik
@@ -275,13 +275,13 @@ Gunakan [Conventional Commits](https://www.conventionalcommits.org/) untuk pesan
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the **MIT License**. See [`LICENSE`](./LICENSE) for more information.
 
 ---
 
-## 👤 Author
+## Author
 
 **Aryasatya**
 
@@ -289,7 +289,7 @@ Distributed under the **MIT License**. See [`LICENSE`](./LICENSE) for more infor
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - [Next.js](https://nextjs.org/) — Framework React produksi yang luar biasa
 - [Prisma](https://www.prisma.io/) — ORM modern untuk TypeScript
